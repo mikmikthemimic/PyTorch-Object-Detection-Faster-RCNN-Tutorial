@@ -57,9 +57,9 @@ class NeptuneSettings(BaseSettings):
     """
 
     api_key: str = Field(default=..., env="NEPTUNE")
-    OWNER: str = "johschmidt42"  # set your name here, e.g. johndoe22
-    PROJECT: str = "Heads"  # set your project name here, e.g. Heads
-    EXPERIMENT: str = "heads"  # set your experiment name here, e.g. heads
+    OWNER: str = "mikmikthemimic"  # set your name here, e.g. mikmikthemimic
+    PROJECT: str = "GM-Thesis3"  # set your project name here, e.g. GM-Thesis3
+    EXPERIMENT: str = "GM-Thesis3"  # set your experiment name here, e.g. GM-Thesis3
 
     class Config:
         # this tells pydantic to read the variables from the .env file

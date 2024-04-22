@@ -110,7 +110,7 @@ def train():
 
     # data path relative to this file (pathlib)
     data_path: pathlib.Path = (
-        ROOT_PATH / "src" / "pytorch_faster_rcnn_tutorial" / "data" / "heads"
+        ROOT_PATH / "pytorch_faster_rcnn_tutorial" / "data" / "heads"
     )
 
     # input and target files

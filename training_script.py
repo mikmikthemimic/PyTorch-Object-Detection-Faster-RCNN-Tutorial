@@ -36,7 +36,7 @@ from pytorch_faster_rcnn_tutorial.utils import (
     log_model_neptune,
 )
 
-logger: logging.Logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 # logging
 logging.basicConfig(
@@ -103,10 +103,10 @@ class Parameters:
 
 def train():
     # environment variables (pydantic BaseSettings class)
-    neptune_settings: NeptuneSettings = NeptuneSettings()
+    neptune_settings = NeptuneSettings()
 
     # parameters (dataclass)
-    parameters: Parameters = Parameters()
+    parameters = Parameters()
 
     # data path relative to this file (pathlib)
     data_path: pathlib.Path = (
@@ -125,7 +125,7 @@ def train():
     mapping: Dict[str, int] = {"head": 1}
 
     # training transformations and augmentations
-    transforms_training: ComposeDouble = ComposeDouble(
+    transforms_training = ComposeDouble(
         [
             Clip(),
             AlbumentationWrapper(albumentation=albumentations.HorizontalFlip(p=0.5)),
@@ -139,7 +139,7 @@ def train():
     )
 
     # validation transformations
-    transforms_validation: ComposeDouble = ComposeDouble(
+    transforms_validation = ComposeDouble(
         [
             Clip(),
             FunctionWrapperDouble(function=np.moveaxis, source=-1, destination=0),
@@ -148,7 +148,7 @@ def train():
     )
 
     # test transformations
-    transforms_test: ComposeDouble = ComposeDouble(
+    transforms_test = ComposeDouble(
         [
             Clip(),
             FunctionWrapperDouble(function=np.moveaxis, source=-1, destination=0),
@@ -168,7 +168,7 @@ def train():
     )
 
     # dataset training
-    dataset_train: ObjectDetectionDataSet = ObjectDetectionDataSet(
+    dataset_train = ObjectDetectionDataSet(
         inputs=inputs_train,
         targets=targets_train,
         transform=transforms_training,
@@ -178,7 +178,7 @@ def train():
     )
 
     # dataset validation
-    dataset_valid: ObjectDetectionDataSet = ObjectDetectionDataSet(
+    dataset_valid = ObjectDetectionDataSet(
         inputs=inputs_valid,
         targets=targets_valid,
         transform=transforms_validation,
@@ -188,7 +188,7 @@ def train():
     )
 
     # dataset test
-    dataset_test: ObjectDetectionDataSet = ObjectDetectionDataSet(
+    dataset_test = ObjectDetectionDataSet(
         inputs=inputs_test,
         targets=targets_test,
         transform=transforms_test,
@@ -198,7 +198,7 @@ def train():
     )
 
     # dataloader training
-    dataloader_train: DataLoader = DataLoader(
+    dataloader_train = DataLoader(
         dataset=dataset_train,
         batch_size=parameters.BATCH_SIZE,
         shuffle=True,
@@ -207,7 +207,7 @@ def train():
     )
 
     # dataloader validation
-    dataloader_valid: DataLoader = DataLoader(
+    dataloader_valid = DataLoader(
         dataset=dataset_valid,
         batch_size=1,
         shuffle=False,
@@ -216,7 +216,7 @@ def train():
     )
 
     # dataloader test
-    dataloader_test: DataLoader = DataLoader(
+    dataloader_test = DataLoader(
         dataset=dataset_test,
         batch_size=1,
         shuffle=False,
@@ -225,7 +225,7 @@ def train():
     )
 
     # neptune logger (neptune-client)
-    neptune_logger: NeptuneLogger = NeptuneLogger(
+    neptune_logger = NeptuneLogger(
         api_key=neptune_settings.api_key,
         project=f"{neptune_settings.OWNER}/{neptune_settings.PROJECT}",  # use your neptune name here
         name=neptune_settings.PROJECT,

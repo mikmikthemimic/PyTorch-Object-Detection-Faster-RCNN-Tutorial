@@ -157,7 +157,8 @@ python-editor
 python-json-logger
 python-multipart
 pytomlpp
-pytorch-lightning
+# pytorch-lightning # Deprecated
+lightning # Use this instead
 pytz
 pywavelets
 pywin32

@@ -3,7 +3,7 @@ from collections import OrderedDict
 from itertools import chain
 from typing import List, Optional, Tuple
 
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 import torch
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator

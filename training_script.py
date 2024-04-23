@@ -7,13 +7,13 @@ from typing import Dict, List, Optional, Tuple
 import albumentations
 import numpy as np
 from pydantic import BaseSettings, Field
-from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.callbacks import (
+from lightning.pytorch import Trainer, seed_everything
+from lightning.pytorch.callbacks import (
     EarlyStopping,
     LearningRateMonitor,
     ModelCheckpoint,
 )
-from pytorch_lightning.loggers.neptune import NeptuneLogger
+from lightning.pytorch.loggers.neptune import NeptuneLogger
 from torch.utils.data import DataLoader
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 

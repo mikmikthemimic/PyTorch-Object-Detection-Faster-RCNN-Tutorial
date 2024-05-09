@@ -1,4 +1,5 @@
 .neptune
 *.pyc
 
-/pytorch_faster_rcnn_tutorial/data/heads/split_data/*/
+/pytorch_faster_rcnn_tutorial/data/heads/*/
+pytorch_faster_rcnn_tutorial/data/heads/add predictions folder.zip

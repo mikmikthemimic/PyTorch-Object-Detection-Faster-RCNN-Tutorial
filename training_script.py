@@ -114,19 +114,16 @@ def train():
     )
 
     # input and target files
-    inputs: List[pathlib.Path] = []
-    targets: List[pathlib.Path] = []
-    for fold in range(5):
-        fold_path = data_path / "split_data" / f"fold{fold}"
-        inputs.extend(get_filenames_of_path(fold_path / "JPEG"))
-        targets.extend(get_filenames_of_path(fold_path / "Annotations"))
+    inputs: List[pathlib.Path] = get_filenames_of_path(data_path / "input")
+    targets: List[pathlib.Path] = get_filenames_of_path(data_path / "target")
+    
 
     # sort inputs and targets
     inputs.sort()
     targets.sort()
 
     # mapping
-    mapping: Dict[str, int] = {"head": 1}
+    mapping: Dict[str, int] = {"Vehicle": 1, "Pedestrian": 2, "Enforcer": 3, "Vehicle-Violator": 4, "Pedestrian-Violator": 5}
 
     # training transformations and augmentations
     transforms_training = ComposeDouble(
@@ -163,7 +160,7 @@ def train():
     # random seed (function that sets seed for pseudo-random number generators in: pytorch, numpy, python.random)
     seed_everything(parameters.SEED)
 
-    # training validation test split (manually)
+    #training validation test split (manually)
     inputs_train, inputs_valid, inputs_test = inputs[:12], inputs[12:16], inputs[16:]
     targets_train, targets_valid, targets_test = (
         targets[:12],

@@ -1,5 +1,5 @@
 .neptune
 *.pyc
-
+execution_logs.log
 /pytorch_faster_rcnn_tutorial/data/heads/*/
-pytorch_faster_rcnn_tutorial/data/heads/add predictions folder.zip
+/pytorch_faster_rcnn_tutorial/data/heads/add predictions folder.zip

@@ -75,8 +75,8 @@ def map_class_to_int(labels: List[str], mapping: dict) -> np.ndarray:
     for key, value in mapping.items():
         dummy[labels == key] = value
         
-    print(labels)
-    print(mapping)
+    # print(labels)
+    # print(mapping)
 
     return dummy.astype(np.uint8)
 

@@ -49,7 +49,10 @@ class ObjectDetectionDataSet(Dataset):
         if self.use_cache:
             # Use multiprocessing to load images and targets into RAM
             with Pool() as pool:
-                self.cached_data = pool.starmap(self.read_images, zip(inputs, targets))
+                try:
+                    self.cached_data = pool.starmap(self.read_images, zip(inputs, targets))
+                except Exception as e:
+                    logger.error(e)
 
     def __len__(self):
         return len(self.inputs)

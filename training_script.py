@@ -40,10 +40,16 @@ logger = logging.getLogger(__name__)
 
 # logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[logging.StreamHandler(sys.stdout)],
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.StreamHandler(sys.stderr),
+        logging.FileHandler("execution_logs.log")
+    ]
+    # filename='training.log',
+    # filemode='a'
 )
 
 # root directory (project directory)
@@ -72,7 +78,7 @@ class Parameters:
     Dataclass for the parameters.
     """
 
-    BATCH_SIZE: int = 2
+    BATCH_SIZE: int = 5
     CACHE: bool = True
     SAVE_DIR: Optional[
         str
@@ -81,7 +87,7 @@ class Parameters:
     ACCELERATOR: Optional[str] = "auto"  # set to "gpu" if you want to use GPU
     LR: float = 0.001
     PRECISION: int = 32
-    CLASSES: int = 2
+    CLASSES: int = 6
     SEED: int = 42
     MAXEPOCHS: int = 500
     PATIENCE: int = 50
@@ -123,7 +129,13 @@ def train():
     targets.sort()
 
     # mapping
-    mapping: Dict[str, int] = {"Vehicle": 1, "Pedestrian": 2, "Enforcer": 3, "Vehicle-Violator": 4, "Pedestrian-Violator": 5}
+    mapping: Dict[str, int] = {
+        "Vehicle": 1,
+        "Pedestrian": 2,
+        "Enforcer": 3,
+        "Vehicle-Violator":4,
+        "Pedestrian-Violator": 5
+    }
 
     # training transformations and augmentations
     transforms_training = ComposeDouble(

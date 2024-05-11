@@ -77,8 +77,8 @@ def map_class_to_int(labels: List[str], mapping: dict) -> np.ndarray:
         
     # print(labels)
     # print(mapping)
-    
-    return dummy.astype(float).astype(np.uint8)
+
+    return dummy.astype(np.uint8)
 
 
 def apply_nms(target: dict, iou_threshold) -> dict:

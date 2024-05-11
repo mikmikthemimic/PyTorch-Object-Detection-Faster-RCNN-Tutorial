@@ -1,0 +1,12 @@
+# inputs_train, inputs_valid, inputs_test = inputs[:12], inputs[12:16], inputs[16:]
+
+# targets_train, targets_valid, targets_test = (
+#     targets[:12],
+#     targets[12:16],
+#     targets[16:],
+# )
+
+n = 0
+
+for i in range(5):
+    print(i)

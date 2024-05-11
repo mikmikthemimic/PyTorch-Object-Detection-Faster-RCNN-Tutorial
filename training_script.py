@@ -5,7 +5,10 @@ from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import albumentations
+import pandas as pd
 import numpy as np
+from sklearn.model_selection import KFold
+
 from pydantic import BaseSettings, Field
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import (
@@ -40,13 +43,13 @@ logger = logging.getLogger(__name__)
 
 # logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.StreamHandler(sys.stderr),
-        logging.FileHandler("execution_logs.log")
+        #logging.StreamHandler(sys.stderr),
+        #logging.FileHandler("execution_logs.log")
     ]
     # filename='training.log',
     # filemode='a'
@@ -106,6 +109,20 @@ class Parameters:
         if self.SAVE_DIR is None:
             self.SAVE_DIR: str = str(pathlib.Path.cwd())
 
+def kfold_indices(data, k):
+
+    # error is in "len(data)" mismo
+    print(len(data))
+    fold_size = len(data) // k
+    indices = np.arange(len(data))
+    folds = []
+    for i in range(k):
+        val_indices = indices[i * fold_size: (i + 1) * fold_size]
+        train_indices = np.concatenate([indices[:i * fold_size], indices[(i + 1) * fold_size:]])
+        folds.append((train_indices, val_indices))
+    return folds
+
+k = 5
 
 def train():
     # environment variables (pydantic BaseSettings class)
@@ -123,10 +140,16 @@ def train():
     inputs: List[pathlib.Path] = get_filenames_of_path(data_path / "input")
     targets: List[pathlib.Path] = get_filenames_of_path(data_path / "target")
     
+    # test files
+    tests: List[pathlib.Path] = get_filenames_of_path(data_path/"test")
+    tests_targets: List[pathlib.Path] = get_filenames_of_path(data_path/"test_targets")
 
     # sort inputs and targets
     inputs.sort()
     targets.sort()
+
+    # Get the fold indices
+    fold_indices = kfold_indices(inputs, k)
 
     # mapping
     mapping: Dict[str, int] = {
@@ -173,59 +196,21 @@ def train():
     seed_everything(parameters.SEED)
 
     #training validation test split (manually)
-    inputs_train, inputs_valid, inputs_test = inputs[:12], inputs[12:16], inputs[16:]
-    targets_train, targets_valid, targets_test = (
-        targets[:12],
-        targets[12:16],
-        targets[16:],
-    )
-
-    # dataset training
-    dataset_train = ObjectDetectionDataSet(
-        inputs=inputs_train,
-        targets=targets_train,
-        transform=transforms_training,
-        use_cache=parameters.CACHE,
-        convert_to_format=None,
-        mapping=mapping,
-    )
-
-    # dataset validation
-    dataset_valid = ObjectDetectionDataSet(
-        inputs=inputs_valid,
-        targets=targets_valid,
-        transform=transforms_validation,
-        use_cache=parameters.CACHE,
-        convert_to_format=None,
-        mapping=mapping,
-    )
+    #inputs_train, inputs_valid, inputs_test = inputs[:12], inputs[12:16], inputs[16:]
+    #targets_train, targets_valid, targets_test = (
+    #    targets[:12],
+    #    targets[12:16],
+    #    targets[16:],
+    #)
 
     # dataset test
     dataset_test = ObjectDetectionDataSet(
-        inputs=inputs_test,
-        targets=targets_test,
+        inputs=tests,
+        targets=tests_targets,
         transform=transforms_test,
         use_cache=parameters.CACHE,
         convert_to_format=None,
         mapping=mapping,
-    )
-
-    # dataloader training
-    dataloader_train = DataLoader(
-        dataset=dataset_train,
-        batch_size=parameters.BATCH_SIZE,
-        shuffle=True,
-        num_workers=0,
-        collate_fn=collate_double,
-    )
-
-    # dataloader validation
-    dataloader_valid = DataLoader(
-        dataset=dataset_valid,
-        batch_size=1,
-        shuffle=False,
-        num_workers=0,
-        collate_fn=collate_double,
     )
 
     # dataloader test
@@ -291,13 +276,56 @@ def train():
         fast_dev_run=parameters.FAST_DEV_RUN,  # set to True to test the pipeline with one batch and without validation, testing and logging
     )
 
-    # start training
-    trainer.fit(
-        model=model,
-        train_dataloaders=dataloader_train,
-        val_dataloaders=dataloader_valid,
-    )
+    for train_indices, val_indices in fold_indices:
+        input_train, targets_train = np.array(inputs)[train_indices.astype(int)], np.array(targets)[train_indices.astype(int)]
+        input_val, targets_val = np.array(inputs)[val_indices.astype(int)], np.array(targets)[val_indices.astype(int)]
 
+        # dataset train
+        dataset_train = ObjectDetectionDataSet(
+            inputs=input_train,
+            targets=targets_train,
+            transform=transforms_training,
+            use_cache=parameters.CACHE,
+            convert_to_format=None,
+            mapping=mapping,
+        )
+
+        # dataset validation
+        dataset_valid = ObjectDetectionDataSet(
+            inputs=input_val,
+            targets=targets_val,
+            transform=transforms_validation,
+            use_cache=parameters.CACHE,
+            convert_to_format=None,
+            mapping=mapping,
+        )
+
+        # dataloader train
+        dataloader_train = DataLoader(
+            dataset=dataset_train,
+            batch_size=parameters.BATCH_SIZE,
+            shuffle=True,
+            num_workers=0,
+            collate_fn=collate_double,
+        )
+
+        # dataloader validation
+        dataloader_valid = DataLoader(
+            dataset=dataset_valid,
+            batch_size=1,
+            shuffle=False,
+            num_workers=0,
+            collate_fn=collate_double,
+        )
+
+        # start training
+        trainer.fit(
+            model=model,
+            train_dataloaders=dataloader_train,
+            val_dataloaders=dataloader_valid,
+        )
+        
+    # find a way to set FAST_DEV_RUN to false to start the validation
     if not parameters.FAST_DEV_RUN:
         # start testing
         trainer.test(ckpt_path="best", dataloaders=dataloader_test)

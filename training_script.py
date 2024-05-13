@@ -81,7 +81,7 @@ class Parameters:
     Dataclass for the parameters.
     """
 
-    BATCH_SIZE: int = 5
+    BATCH_SIZE: int = 10
     CACHE: bool = True
     SAVE_DIR: Optional[
         str
@@ -90,9 +90,9 @@ class Parameters:
     ACCELERATOR: Optional[str] = "auto"  # set to "gpu" if you want to use GPU
     LR: float = 0.001
     PRECISION: int = 32
-    CLASSES: int = 6
+    CLASSES: int = 10
     SEED: int = 42
-    MAXEPOCHS: int = 500
+    MAXEPOCHS: int = 5
     PATIENCE: int = 50
     BACKBONE: ResNetBackbones = ResNetBackbones.RESNET34
     FPN: bool = False

@@ -70,15 +70,28 @@ def clip_bbs(inp: np.ndarray, bbs: np.ndarray) -> np.array:
 
 def map_class_to_int(labels: List[str], mapping: dict) -> np.ndarray:
     """Maps a string to an integer."""
-    labels = np.array(labels)
-    dummy = np.empty_like(labels)
+    np_labels = np.array(labels)
+    dummy = np.empty_like(np_labels, dtype=np.uint8)
+    #dummy[dummy.astype(bool)]
+    output = []
     for key, value in mapping.items():
-        dummy[labels == key] = value
-        
-    # print(labels)
-    # print(mapping)
+        dummy[np_labels == key] = value
+    
+    #NOPE WALA ATA ERROR DITO
+    #print(labels)
+    #print(mapping)
+    try:
+        res = dummy.astype(np.uint8)
+        return res
+    except ValueError:
+        #print(f"Error: {output} is an invalid literal for int() with base 10")
+        for elem in dummy:
+            output.append(elem)
 
-    return dummy.astype(np.uint8)
+        output = np.array(output, dtype=np.uint8)
+        return output
+
+    
 
 
 def apply_nms(target: dict, iou_threshold) -> dict:

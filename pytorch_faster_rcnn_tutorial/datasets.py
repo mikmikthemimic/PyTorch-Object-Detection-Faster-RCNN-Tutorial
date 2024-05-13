@@ -94,6 +94,7 @@ class ObjectDetectionDataSet(Dataset):
         # Read labels
         try:
             labels = torch.from_numpy(labels).to(torch.int64)
+            # TypeError: can't convert np.ndarray of type numpy.str_. The only supported types are: float64, float32, float16, complex64, complex128, int64, int32, int16, int8, uint8, and bool.
         except TypeError:
             labels = torch.tensor(labels).to(torch.int64)
 

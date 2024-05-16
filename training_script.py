@@ -48,11 +48,15 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        #logging.StreamHandler(sys.stderr),
-        #logging.FileHandler("execution_logs.log")
     ]
-    # filename='training.log',
-    # filemode='a'
+)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler("execution_logs.log"),
+    ]
 )
 
 # root directory (project directory)
@@ -81,18 +85,18 @@ class Parameters:
     Dataclass for the parameters.
     """
 
-    BATCH_SIZE: int = 10
+    BATCH_SIZE: int = 6
     CACHE: bool = True
     SAVE_DIR: Optional[
         str
     ] = None  # checkpoints will be saved to cwd (current working directory) if None
-    LOG_MODEL: bool = False  # whether to log the model to neptune after training
+    LOG_MODEL: bool = True  # whether to log the model to neptune after training
     ACCELERATOR: Optional[str] = "auto"  # set to "gpu" if you want to use GPU
     LR: float = 0.001
     PRECISION: int = 32
     CLASSES: int = 10
     SEED: int = 42
-    MAXEPOCHS: int = 5
+    MAXEPOCHS: int = 5  # 4
     PATIENCE: int = 50
     BACKBONE: ResNetBackbones = ResNetBackbones.RESNET34
     FPN: bool = False
@@ -122,7 +126,8 @@ def kfold_indices(data, k):
         folds.append((train_indices, val_indices))
     return folds
 
-k = 5
+# BAWAL TO MAGING 1 ABIIII PLS ANTAGAL MONG NASTUCK DAHIL DITO OMG WAG MO NA ICHANGE EVER -past abi :> labyu
+k = 2
 
 def train():
     # environment variables (pydantic BaseSettings class)
@@ -148,6 +153,7 @@ def train():
     inputs.sort()
     targets.sort()
 
+    print(inputs)
     # Get the fold indices
     fold_indices = kfold_indices(inputs, k)
 
@@ -279,6 +285,7 @@ def train():
     for train_indices, val_indices in fold_indices:
         input_train, targets_train = np.array(inputs)[train_indices.astype(int)], np.array(targets)[train_indices.astype(int)]
         input_val, targets_val = np.array(inputs)[val_indices.astype(int)], np.array(targets)[val_indices.astype(int)]
+        print(input_train)
 
         # dataset train
         dataset_train = ObjectDetectionDataSet(
@@ -324,6 +331,7 @@ def train():
             train_dataloaders=dataloader_train,
             val_dataloaders=dataloader_valid,
         )
+    
         
     # find a way to set FAST_DEV_RUN to false to start the validation
     if not parameters.FAST_DEV_RUN:

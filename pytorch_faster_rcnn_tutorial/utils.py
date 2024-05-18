@@ -15,6 +15,8 @@ from torchvision.ops import box_area, box_convert
 from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
 from pytorch_faster_rcnn_tutorial.metrics.enumerators import BBFormat, BBType
 
+ROOT_PATH: pathlib.Path = pathlib.Path(__file__).parent.absolute()
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -202,29 +204,32 @@ def log_mapping_neptune(mapping: dict, neptune_logger):
     )
     log_table(name="mapping", table=mapping_df, experiment=neptune_logger.experiment)
 
-
 def log_model_neptune(
-    checkpoint_path: pathlib.Path,
-    save_directory: pathlib.Path,
+    checkpoint_path: ROOT_PATH / "model",
+    save_directory: ROOT_PATH / "model",
     name: str,
     neptune_logger,
 ):
+    print(ROOT_PATH/"model")
     """
     Saves the model to disk, uploads it to neptune and removes it again.
     """
     checkpoint = torch.load(checkpoint_path)
     model = checkpoint["hyper_parameters"]["model"]
     torch.save(model.state_dict(), save_directory / name)
-    neptune_logger.experiment.set_property("checkpoint_name", checkpoint_path.name)
-    neptune_logger.experiment.log_artifact(str(save_directory / name))
+    #neptune_logger.set_property("checkpoint_name", checkpoint_path.name)
+    neptune_logger.experiment["properties/checkpoint_name"] = str(checkpoint_path.name)
+    #neptune_logger.experiment.log_artifact(str(save_directory / name))
+    neptune_logger.experiment["artifacts/model"].upload(str(save_directory/name))
     if os.path.isfile(save_directory / name):
         os.remove(save_directory / name)
 
 
 def log_checkpoint_neptune(checkpoint_path: pathlib.Path, neptune_logger):
-    neptune_logger.experiment.set_property("checkpoint_name", checkpoint_path.name)
-    neptune_logger.experiment.log_artifact(str(checkpoint_path))
-
+    #neptune_logger.experiment.set_property("checkpoint_name", checkpoint_path.name)
+    neptune_logger.experiment["properties/checkpoint_name"] = str(checkpoint_path.name)
+    #neptune_logger.experiment.log_artifact(str(checkpoint_path))
+    neptune_logger.experiment["artifacts/model"].upload(str(checkpoint_path))
 
 def some_function():
     print("44")

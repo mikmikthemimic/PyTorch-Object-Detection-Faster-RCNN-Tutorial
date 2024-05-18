@@ -16,7 +16,8 @@ from lightning.pytorch.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
-from lightning.pytorch.loggers.neptune import NeptuneLogger
+import neptune
+from lightning.pytorch.loggers import NeptuneLogger
 from torch.utils.data import DataLoader
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 
@@ -86,7 +87,7 @@ class Parameters:
     """
 
     BATCH_SIZE: int = 6
-    CACHE: bool = True
+    CACHE: bool = False
     SAVE_DIR: Optional[
         str
     ] = None  # checkpoints will be saved to cwd (current working directory) if None
@@ -96,7 +97,7 @@ class Parameters:
     PRECISION: int = 32
     CLASSES: int = 10
     SEED: int = 42
-    MAXEPOCHS: int = 5  # 4
+    MAXEPOCHS: int = 1  # 4
     PATIENCE: int = 50
     BACKBONE: ResNetBackbones = ResNetBackbones.RESNET34
     FPN: bool = False
@@ -114,9 +115,6 @@ class Parameters:
             self.SAVE_DIR: str = str(pathlib.Path.cwd())
 
 def kfold_indices(data, k):
-
-    # error is in "len(data)" mismo
-    print(len(data))
     fold_size = len(data) // k
     indices = np.arange(len(data))
     folds = []
@@ -153,7 +151,6 @@ def train():
     inputs.sort()
     targets.sort()
 
-    print(inputs)
     # Get the fold indices
     fold_indices = kfold_indices(inputs, k)
 
@@ -285,7 +282,6 @@ def train():
     for train_indices, val_indices in fold_indices:
         input_train, targets_train = np.array(inputs)[train_indices.astype(int)], np.array(targets)[train_indices.astype(int)]
         input_val, targets_val = np.array(inputs)[val_indices.astype(int)], np.array(targets)[val_indices.astype(int)]
-        print(input_train)
 
         # dataset train
         dataset_train = ObjectDetectionDataSet(
@@ -341,9 +337,12 @@ def train():
         # log model
         if parameters.LOG_MODEL:
             checkpoint_path = pathlib.Path(checkpoint_callback.best_model_path)
+            save_directory = pathlib.Path(ROOT_PATH / "model")
+            print(checkpoint_path)
+            print(save_directory)
             log_model_neptune(
                 checkpoint_path=checkpoint_path,
-                save_directory=pathlib.Path.home(),
+                save_directory=save_directory,
                 name="best_model.pt",
                 neptune_logger=neptune_logger,
             )

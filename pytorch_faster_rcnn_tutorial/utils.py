@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pathlib
+import time
 from typing import Dict, List, Union
 
 import importlib_metadata
@@ -205,24 +206,37 @@ def log_mapping_neptune(mapping: dict, neptune_logger):
     log_table(name="mapping", table=mapping_df, experiment=neptune_logger.experiment)
 
 def log_model_neptune(
-    checkpoint_path: ROOT_PATH / "model",
-    save_directory: ROOT_PATH / "model",
+    checkpoint_path: pathlib.Path,
+    save_directory: pathlib.Path,
     name: str,
     neptune_logger,
 ):
-    print(ROOT_PATH/"model")
     """
     Saves the model to disk, uploads it to neptune and removes it again.
     """
     checkpoint = torch.load(checkpoint_path)
     model = checkpoint["hyper_parameters"]["model"]
-    torch.save(model.state_dict(), save_directory / name)
-    #neptune_logger.set_property("checkpoint_name", checkpoint_path.name)
+    if not save_directory.exists():
+        save_directory.mkdir(parents=True)
+    model_save_path = str(save_directory / name)
+    
+    if os.path.isfile(model_save_path):
+        os.remove(model_save_path)
+    
+    print(f'Saving model to {model_save_path}')
+    print(model.state_dict())
+    while not os.path.isfile(model_save_path):
+        try:
+            torch.save(model.state_dict(), model_save_path)
+            time.sleep(1) # Wait for the file to be available
+        except:
+            pass # Try again
+    
     neptune_logger.experiment["properties/checkpoint_name"] = str(checkpoint_path.name)
-    #neptune_logger.experiment.log_artifact(str(save_directory / name))
     neptune_logger.experiment["artifacts/model"].upload(str(save_directory/name))
-    if os.path.isfile(save_directory / name):
-        os.remove(save_directory / name)
+
+    
+
 
 
 def log_checkpoint_neptune(checkpoint_path: pathlib.Path, neptune_logger):

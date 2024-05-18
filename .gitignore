@@ -6,3 +6,7 @@ execution_logs.log
 pytorch_faster_rcnn_tutorial/data/heads/new add predictions folder.zip
 pytorch_faster_rcnn_tutorial/data/heads/newer add predictions folder.zip
 pytorch_faster_rcnn_tutorial/data/heads/newest add predictions folder.zip
+/pytorch_faster_rcnn_tutorial/data/heads_backup
+/pytorch_faster_rcnn_tutorial/data/heads_less
+/pytorch_faster_rcnn_tutorial/data/heads_full
+model/best_model.pt

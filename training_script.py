@@ -338,8 +338,6 @@ def train():
         if parameters.LOG_MODEL:
             checkpoint_path = pathlib.Path(checkpoint_callback.best_model_path)
             save_directory = pathlib.Path(ROOT_PATH / "model")
-            print(checkpoint_path)
-            print(save_directory)
             log_model_neptune(
                 checkpoint_path=checkpoint_path,
                 save_directory=save_directory,

@@ -1,15 +1,13 @@
 .neptune
+
 *.pyc
+*.ckpt
+*.pt
+
 execution_logs.log
-/pytorch_faster_rcnn_tutorial/data/heads/*/
-/pytorch_faster_rcnn_tutorial/data/heads/add predictions folder.zip
-pytorch_faster_rcnn_tutorial/data/heads/new add predictions folder.zip
-pytorch_faster_rcnn_tutorial/data/heads/newer add predictions folder.zip
-pytorch_faster_rcnn_tutorial/data/heads/newest add predictions folder.zip
-/pytorch_faster_rcnn_tutorial/data/heads_backup
-/pytorch_faster_rcnn_tutorial/data/heads_less
-/pytorch_faster_rcnn_tutorial/data/heads_full
-model/best_model.pt
-kfold_initial_weights.ckpt
-fold_0.ckpt
-fold_1.ckpt
+
+# This ignores all the dataset / zipped dataset files
+# Wag mo na galawin pls
+pytorch_faster_rcnn_tutorial/data/heads/*.zip
+pytorch_faster_rcnn_tutorial/data/heads/*/*
+pytorch_faster_rcnn_tutorial/data/heads_*/*

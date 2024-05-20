@@ -5,9 +5,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import albumentations
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold
 
 from pydantic import BaseSettings, Field
 from lightning.pytorch import Trainer, seed_everything
@@ -16,7 +14,7 @@ from lightning.pytorch.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
-import neptune
+
 from lightning.pytorch.loggers import NeptuneLogger
 from torch.utils.data import DataLoader
 from torchvision.models.detection.faster_rcnn import FasterRCNN

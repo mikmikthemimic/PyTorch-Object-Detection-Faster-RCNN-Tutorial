@@ -5,9 +5,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import albumentations
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold
 
 from pydantic import BaseSettings, Field
 # from lightning.pytorch import Trainer, seed_everything
@@ -17,7 +15,7 @@ from lightning.pytorch.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
 )
-import neptune
+
 from lightning.pytorch.loggers import NeptuneLogger
 from torch.utils.data import DataLoader
 from torchvision.models.detection.faster_rcnn import FasterRCNN
@@ -41,8 +39,10 @@ from pytorch_faster_rcnn_tutorial.utils import (
     log_model_neptune,
 )
 
-from pl_crossvalidate import KFoldTrainer as Trainer
-from pl_crossvalidate import KFoldDataModule
+from pytorch_faster_rcnn_tutorial.pl_crossvalidate.KFoldTrainer import (
+    KFoldTrainer as Trainer,
+    KFoldDataModule
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -52,6 +52,15 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler(sys.stdout)],
+)
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler("execution_logs.log"),
+    ]
 )
 
 # root directory (project directory)
@@ -91,7 +100,7 @@ class Parameters:
     PRECISION: int = 32
     CLASSES: int = 10
     SEED: int = 42
-    MAXEPOCHS: int = 2  # 4
+    MAXEPOCHS: int = 5  # 4
     MINEPOCHS: int = 1
     PATIENCE: int = 50
     BACKBONE: ResNetBackbones = ResNetBackbones.RESNET34
@@ -109,7 +118,6 @@ class Parameters:
         if self.SAVE_DIR is None:
             self.SAVE_DIR: str = str(pathlib.Path.cwd())
 
-
 def train():
     # environment variables (pydantic BaseSettings class)
     neptune_settings: NeptuneSettings = NeptuneSettings()
@@ -126,19 +134,15 @@ def train():
     inputs: List[pathlib.Path] = get_filenames_of_path(data_path / "input")
     targets: List[pathlib.Path] = get_filenames_of_path(data_path / "target")
     
-    
     # test files
-    tests: List[pathlib.Path] = get_filenames_of_path(data_path/"test")
-    tests_targets: List[pathlib.Path] = get_filenames_of_path(data_path/"test_targets")
-
-
-    # test files
-    tests: List[pathlib.Path] = get_filenames_of_path(data_path/"test")
-    tests_targets: List[pathlib.Path] = get_filenames_of_path(data_path/"test_targets")
+    tests: List[pathlib.Path] = get_filenames_of_path(data_path / "test")
+    tests_targets: List[pathlib.Path] = get_filenames_of_path(data_path / "test_targets")
 
     # sort inputs and targets
     inputs.sort()
     targets.sort()
+    tests.sort()
+    tests_targets.sort()
 
     # mapping
     mapping: Dict[str, int] = {
@@ -184,13 +188,26 @@ def train():
     # random seed (function that sets seed for pseudo-random number generators in: pytorch, numpy, python.random)
     seed_everything(parameters.SEED)
 
-    # training validation test split (manually)
-    inputs_train, inputs_valid, inputs_test = inputs[:12], inputs[12:16], inputs[16:]
-    targets_train, targets_valid, targets_test = (
-        targets[:12],
-        targets[12:16],
-        targets[16:],
-    )
+    # # training validation test split (manually)
+    # inputs_train, inputs_valid, inputs_test = inputs[:12], inputs[12:16], inputs[16:]
+    # targets_train, targets_valid, targets_test = (
+    #     targets[:12],
+    #     targets[12:16],
+    #     targets[16:],
+    # )
+
+    # training validation test split (80% training, 20% validation)
+    inputs_train, inputs_valid = inputs[:int(0.8 * len(inputs))], inputs[int(0.8 * len(inputs)):]
+    targets_train, targets_valid = targets[:int(0.8 * len(targets))], targets[int(0.8 * len(targets)):]
+
+    inputs_test = tests
+    targets_test = tests_targets
+
+    total = len(inputs) + len(tests)
+    logger.info(f'Total of the dataset: {total}')
+    logger.info(f'Training dataset: {len(inputs_train)} ({len(inputs_train)/total*100:.2f}%)')
+    logger.info(f'Validation dataset: {len(inputs_valid)} ({len(inputs_valid)/total*100:.2f}%)')
+    logger.info(f'Test dataset: {len(inputs_test)} ({len(inputs_test)/total*100:.2f}%)')
 
     # dataset training
     dataset_train: ObjectDetectionDataSet = ObjectDetectionDataSet(
@@ -304,29 +321,31 @@ def train():
         num_folds=5,
         shuffle=True,
         stratified=False,
-        log_directory=pathlib.Path(checkpoint_callback.best_model_path)
+        model_directory=str(pathlib.Path(checkpoint_callback.best_model_path))
     )
 
     datamodule = KFoldDataModule(
-        num_folds=5, 
+        num_folds=5,
         shuffle=True, 
         stratified=False, 
-        train_dataloader=dataloader_train
+        train_dataloader=dataloader_train,
+        val_dataloaders=dataloader_valid
     )
 
     datamodule.label_extractor = lambda batch: batch['y']
 
     # start training
-    # trainer.fit(
-    #     model=model,
-    #     train_dataloaders=dataloader_train,
-    #     val_dataloaders=dataloader_valid,
-    # )
+    trainer.fit(
+        model=model,
+        train_dataloaders=dataloader_train,
+        val_dataloaders=dataloader_valid,
+    )
 
     cross_val_stats = trainer.cross_validate(
         model=model,
-        train_dataloader=dataloader_train,
-        val_dataloaders=dataloader_valid,
+        # train_dataloader=dataloader_train,
+        # val_dataloaders=dataloader_valid,
+        datamodule=datamodule,
     )
     logger.info(f"Cross validation stats: {cross_val_stats}")
 

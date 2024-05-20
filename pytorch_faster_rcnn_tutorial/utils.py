@@ -224,7 +224,6 @@ def log_model_neptune(
         os.remove(model_save_path)
     
     print(f'Saving model to {model_save_path}')
-    print(model.state_dict())
     while not os.path.isfile(model_save_path):
         try:
             torch.save(model.state_dict(), model_save_path)

@@ -97,7 +97,7 @@ class Parameters:
     PRECISION: int = 32
     CLASSES: int = 10
     SEED: int = 42
-    MAXEPOCHS: int = 1  # 4
+    MAXEPOCHS: int = 25  # 4
     PATIENCE: int = 50
     BACKBONE: ResNetBackbones = ResNetBackbones.RESNET34
     FPN: bool = False
@@ -126,7 +126,7 @@ def kfold_indices(data, k):
 
 # BAWAL TO MAGING 1 ABIIII PLS ANTAGAL MONG NASTUCK DAHIL DITO OMG WAG MO NA ICHANGE EVER -past abi :> labyu
 k = 2
-
+reload_dataloaders_every_n_epochs = 5
 def train():
     # environment variables (pydantic BaseSettings class)
     neptune_settings = NeptuneSettings()
@@ -278,56 +278,56 @@ def train():
         max_epochs=parameters.MAXEPOCHS,
         fast_dev_run=parameters.FAST_DEV_RUN,  # set to True to test the pipeline with one batch and without validation, testing and logging
     )
+    for epoch in range(parameters.MAXEPOCHS):
+        for train_indices, val_indices in fold_indices:
+            input_train, targets_train = np.array(inputs)[train_indices.astype(int)], np.array(targets)[train_indices.astype(int)]
+            input_val, targets_val = np.array(inputs)[val_indices.astype(int)], np.array(targets)[val_indices.astype(int)]
 
-    for train_indices, val_indices in fold_indices:
-        input_train, targets_train = np.array(inputs)[train_indices.astype(int)], np.array(targets)[train_indices.astype(int)]
-        input_val, targets_val = np.array(inputs)[val_indices.astype(int)], np.array(targets)[val_indices.astype(int)]
+            # dataset train
+            dataset_train = ObjectDetectionDataSet(
+                inputs=input_train,
+                targets=targets_train,
+                transform=transforms_training,
+                use_cache=parameters.CACHE,
+                convert_to_format=None,
+                mapping=mapping,
+            )
 
-        # dataset train
-        dataset_train = ObjectDetectionDataSet(
-            inputs=input_train,
-            targets=targets_train,
-            transform=transforms_training,
-            use_cache=parameters.CACHE,
-            convert_to_format=None,
-            mapping=mapping,
-        )
+            # dataset validation
+            dataset_valid = ObjectDetectionDataSet(
+                inputs=input_val,
+                targets=targets_val,
+                transform=transforms_validation,
+                use_cache=parameters.CACHE,
+                convert_to_format=None,
+                mapping=mapping,
+            )
+            # dataloader train
+            dataloader_train = DataLoader(
+                dataset=dataset_train,
+                batch_size=parameters.BATCH_SIZE,
+                shuffle=True,
+                num_workers=0,
+                collate_fn=collate_double,
+            )
 
-        # dataset validation
-        dataset_valid = ObjectDetectionDataSet(
-            inputs=input_val,
-            targets=targets_val,
-            transform=transforms_validation,
-            use_cache=parameters.CACHE,
-            convert_to_format=None,
-            mapping=mapping,
-        )
-
-        # dataloader train
-        dataloader_train = DataLoader(
-            dataset=dataset_train,
-            batch_size=parameters.BATCH_SIZE,
-            shuffle=True,
-            num_workers=0,
-            collate_fn=collate_double,
-        )
-
-        # dataloader validation
-        dataloader_valid = DataLoader(
-            dataset=dataset_valid,
-            batch_size=1,
-            shuffle=False,
-            num_workers=0,
-            collate_fn=collate_double,
-        )
-
-        # start training
-        trainer.fit(
-            model=model,
-            train_dataloaders=dataloader_train,
-            val_dataloaders=dataloader_valid,
-        )
-    
+            # dataloader validation
+            dataloader_valid = DataLoader(
+                dataset=dataset_valid,
+                batch_size=1,
+                shuffle=False,
+                num_workers=0,
+                collate_fn=collate_double,
+            )
+            if not epoch % reload_dataloaders_every_n_epochs:
+                train_loader = datamodule.dataloader_train()
+            for batch in train_loader:
+                # start training
+                trainer.fit(
+                    model=model,
+                    train_dataloaders=train_loader,
+                    val_dataloaders=dataloader_valid,
+                )
         
     # find a way to set FAST_DEV_RUN to false to start the validation
     if not parameters.FAST_DEV_RUN:

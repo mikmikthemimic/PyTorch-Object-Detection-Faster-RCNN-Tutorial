@@ -10,3 +10,6 @@ pytorch_faster_rcnn_tutorial/data/heads/newest add predictions folder.zip
 /pytorch_faster_rcnn_tutorial/data/heads_less
 /pytorch_faster_rcnn_tutorial/data/heads_full
 model/best_model.pt
+kfold_initial_weights.ckpt
+fold_0.ckpt
+fold_1.ckpt

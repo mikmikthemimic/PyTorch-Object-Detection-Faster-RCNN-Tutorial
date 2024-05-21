@@ -11,6 +11,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
+from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.ops import box_area, box_convert
 
 from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
@@ -214,6 +215,7 @@ def log_model_neptune(
     """
     Saves the model to disk, uploads it to neptune and removes it again.
     """
+    print(f"Trying to load model from {checkpoint_path}")
     checkpoint = torch.load(checkpoint_path)
     model = checkpoint["hyper_parameters"]["model"]
     if not save_directory.exists():
@@ -234,9 +236,33 @@ def log_model_neptune(
     neptune_logger.experiment["properties/checkpoint_name"] = str(checkpoint_path.name)
     neptune_logger.experiment["artifacts/model"].upload(str(save_directory/name))
 
+def log_model_neptune_v2(
+        model: FasterRCNN,
+        save_directory: pathlib.Path,
+        name: str,
+        neptune_logger
+):
+    """
+    Saves the model to disk, uploads it to neptune and removes it again.
+    """
+    model_save_path = str(save_directory / name)
     
-
-
+    if not save_directory.exists():
+        save_directory.mkdir(parents=True)
+    
+    if os.path.isfile(model_save_path):
+        os.remove(model_save_path)
+    
+    print(f'Saving model to {model_save_path}')
+    while not os.path.isfile(model_save_path):
+        try:
+            torch.save(model.state_dict(), model_save_path)
+            time.sleep(1) # Wait for the file to be available
+        except:
+            pass # Try again
+    
+    neptune_logger.experiment["properties/checkpoint_name"] = 'N/A. Using model directly.'
+    neptune_logger.experiment["artifacts/model"].upload(str(model_save_path))
 
 def log_checkpoint_neptune(checkpoint_path: pathlib.Path, neptune_logger):
     #neptune_logger.experiment.set_property("checkpoint_name", checkpoint_path.name)

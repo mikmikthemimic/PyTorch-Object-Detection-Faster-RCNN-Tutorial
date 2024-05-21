@@ -38,25 +38,23 @@ from pytorch_faster_rcnn_tutorial.utils import (
     log_model_neptune,
 )
 
+log_format = logging.Formatter(
+    fmt="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
 logger = logging.getLogger(__name__)
 
-# logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-    ]
-)
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler("execution_logs.log"),
-    ]
-)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(log_format)
+
+file_handler = logging.FileHandler("execution_logs.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(log_format)
+
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 
 # root directory (project directory)
 ROOT_PATH: pathlib.Path = pathlib.Path(__file__).parent.absolute()

@@ -17,6 +17,7 @@ from lightning.pytorch.callbacks import (
 )
 
 from lightning.pytorch.loggers import NeptuneLogger
+import torch
 from torch.utils.data import DataLoader
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 
@@ -37,6 +38,7 @@ from pytorch_faster_rcnn_tutorial.utils import (
     collate_double,
     get_filenames_of_path,
     log_model_neptune,
+    log_model_neptune_v2,
 )
 
 from pytorch_faster_rcnn_tutorial.pl_crossvalidate.KFoldTrainer import (
@@ -44,28 +46,31 @@ from pytorch_faster_rcnn_tutorial.pl_crossvalidate.KFoldTrainer import (
     KFoldDataModule
 )
 
-logger: logging.Logger = logging.getLogger(__name__)
-
-# logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
+log_format = logging.Formatter(
+    fmt="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d:%(funcName)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler("execution_logs.log"),
-    ]
-)
+logger = logging.getLogger(__name__)
+
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(log_format)
+
+file_handler = logging.FileHandler("execution_logs.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(log_format)
+
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+logger.setLevel(logging.NOTSET)
 
 # root directory (project directory)
 ROOT_PATH: pathlib.Path = pathlib.Path(__file__).parent.absolute()
 
+if torch.cuda.is_available():
+    torch.set_float32_matmul_precision('medium')
 
 class NeptuneSettings(BaseSettings):
     """
@@ -95,13 +100,14 @@ class Parameters:
         str
     ] = None  # checkpoints will be saved to cwd (current working directory) if None
     LOG_MODEL: bool = True  # whether to log the model to neptune after training
-    ACCELERATOR: Optional[str] = "auto"  # set to "gpu" if you want to use GPU
+    ACCELERATOR: Optional[str] = "cuda"  # set to "gpu" if you want to use GPU
+    # Available names are: auto, cpu, cuda, mps, tpu
     LR: float = 0.001
     PRECISION: int = 32
     CLASSES: int = 10
     SEED: int = 42
     MAXEPOCHS: int = 5  # 4
-    MINEPOCHS: int = 1
+    FOLDS: int = 5 # 5
     PATIENCE: int = 50
     BACKBONE: ResNetBackbones = ResNetBackbones.RESNET34
     FPN: bool = False
@@ -128,6 +134,7 @@ def train():
     # data path relative to this file (pathlib)
     data_path: pathlib.Path = (
         ROOT_PATH / "pytorch_faster_rcnn_tutorial" / "data" / "heads"
+        # ROOT_PATH / "pytorch_faster_rcnn_tutorial" / "data" / "heads_test"
     )
 
     # input and target files
@@ -244,7 +251,8 @@ def train():
         dataset=dataset_train,
         batch_size=parameters.BATCH_SIZE,
         shuffle=True,
-        num_workers=15,
+        num_workers=4,
+        persistent_workers=True,
         collate_fn=collate_double,
     )
 
@@ -253,7 +261,8 @@ def train():
         dataset=dataset_valid,
         batch_size=1,
         shuffle=False,
-        num_workers=15,
+        num_workers=4,
+        persistent_workers=True,
         collate_fn=collate_double,
     )
 
@@ -262,7 +271,7 @@ def train():
         dataset=dataset_test,
         batch_size=1,
         shuffle=False,
-        num_workers=0,
+        num_workers=2,
         collate_fn=collate_double,
     )
 
@@ -318,10 +327,10 @@ def train():
         num_sanity_val_steps=0,  # set to 0 to skip sanity check
         max_epochs=parameters.MAXEPOCHS,
         fast_dev_run=parameters.FAST_DEV_RUN,  # set to True to test the pipeline with one batch and without validation, testing and logging
-        num_folds=5,
+        num_folds=parameters.FOLDS,
         shuffle=True,
         stratified=False,
-        model_directory=str(pathlib.Path(checkpoint_callback.best_model_path))
+        model_directory= ROOT_PATH / "model" / "kfolds",
     )
 
     datamodule = KFoldDataModule(
@@ -335,11 +344,11 @@ def train():
     datamodule.label_extractor = lambda batch: batch['y']
 
     # start training
-    trainer.fit(
-        model=model,
-        train_dataloaders=dataloader_train,
-        val_dataloaders=dataloader_valid,
-    )
+    # trainer.fit(
+    #     model=model,
+    #     train_dataloaders=dataloader_train,
+    #     val_dataloaders=dataloader_valid,
+    # )
 
     cross_val_stats = trainer.cross_validate(
         model=model,
@@ -351,18 +360,32 @@ def train():
 
     if not parameters.FAST_DEV_RUN:
         # start testing
-        trainer.test(ckpt_path="best", dataloaders=dataloader_test)
+        # trainer.test(ckpt_path="best", dataloaders=dataloader_test) # Using this if we're using trainer.fit()
+        trainer.test(
+            ckpt_path=None,
+            dataloaders=dataloader_test,
+            model=model,
+        )
 
         # log model
         if parameters.LOG_MODEL:
             checkpoint_path = pathlib.Path(checkpoint_callback.best_model_path)
             save_directory = pathlib.Path(ROOT_PATH / "model")
-            log_model_neptune(
-                checkpoint_path=checkpoint_path,
-                save_directory=save_directory,
-                name="best_model.pt",
-                neptune_logger=neptune_logger,
-            )
+            
+            if str(checkpoint_path) == '.':
+                log_model_neptune_v2(
+                    model=model,
+                    save_directory=save_directory,
+                    name="best_model.pt",
+                    neptune_logger=neptune_logger,
+                )
+            else:
+                log_model_neptune(
+                    checkpoint_path=checkpoint_path,
+                    save_directory=save_directory,
+                    name="best_model.pt",
+                    neptune_logger=neptune_logger,
+                )
 
     # stop logger
     neptune_logger.experiment.stop()

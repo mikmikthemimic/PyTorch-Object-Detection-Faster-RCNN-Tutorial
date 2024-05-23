@@ -211,10 +211,10 @@ def train():
     targets_test = tests_targets
 
     total = len(inputs) + len(tests)
-    logger.info(f'Total of the dataset: {total}')
-    logger.info(f'Training dataset: {len(inputs_train)} ({len(inputs_train)/total*100:.2f}%)')
-    logger.info(f'Validation dataset: {len(inputs_valid)} ({len(inputs_valid)/total*100:.2f}%)')
-    logger.info(f'Test dataset: {len(inputs_test)} ({len(inputs_test)/total*100:.2f}%)')
+    print(f'Total of the dataset: {total}')
+    print(f'Training dataset: {len(inputs_train)} ({len(inputs_train)/total*100:.2f}%)')
+    print(f'Validation dataset: {len(inputs_valid)} ({len(inputs_valid)/total*100:.2f}%)')
+    print(f'Test dataset: {len(inputs_test)} ({len(inputs_test)/total*100:.2f}%)')
 
     # dataset training
     dataset_train: ObjectDetectionDataSet = ObjectDetectionDataSet(
@@ -259,7 +259,7 @@ def train():
     # dataloader validation
     dataloader_valid: DataLoader = DataLoader(
         dataset=dataset_valid,
-        batch_size=1,
+        batch_size=parameters.BATCH_SIZE,
         shuffle=False,
         num_workers=4,
         persistent_workers=True,
@@ -281,6 +281,7 @@ def train():
         project=f"{neptune_settings.OWNER}/{neptune_settings.PROJECT}",  # use your neptune name here
         name=neptune_settings.PROJECT,
         log_model_checkpoints=False,
+        capture
     )
 
     # log hyperparameters

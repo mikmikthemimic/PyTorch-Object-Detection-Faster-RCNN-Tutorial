@@ -281,7 +281,6 @@ def train():
         project=f"{neptune_settings.OWNER}/{neptune_settings.PROJECT}",  # use your neptune name here
         name=neptune_settings.PROJECT,
         log_model_checkpoints=False,
-        capture
     )
 
     # log hyperparameters

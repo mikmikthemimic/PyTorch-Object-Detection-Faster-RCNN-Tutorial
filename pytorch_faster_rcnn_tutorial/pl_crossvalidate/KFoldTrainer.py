@@ -116,6 +116,8 @@ class KFoldTrainer(Trainer):
         for i in range(self.num_folds):
             self._set_fold_index(i, datamodule=datamodule)
             print(f"===== Starting fold {i+1}/{self.num_folds} =====")
+            print(f'Resetting model validation steps to empty.')
+            model.validation_step_outputs = []
             self.fit(model=model, datamodule=datamodule, ckpt_path=path)
 
             fold_path = osp.join(self.model_directory, f"fold_{i}.ckpt")

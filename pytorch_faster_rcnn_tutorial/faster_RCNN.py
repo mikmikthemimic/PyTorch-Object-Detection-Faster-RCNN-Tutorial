@@ -117,11 +117,19 @@ def get_faster_rcnn_resnet(
         backbone: torch.nn.Sequential = get_resnet_backbone(backbone_name=backbone_name)
 
     # Anchors
-    anchor_size = anchor_size
-    aspect_ratios = aspect_ratios * len(anchor_size)
-    anchor_generator = get_anchor_generator(
-        anchor_size=anchor_size, aspect_ratios=aspect_ratios
-    )
+    if not fpn:
+        anchor_size = anchor_size
+        aspect_ratios = aspect_ratios * len(anchor_size)
+        anchor_generator = get_anchor_generator(
+            anchor_size=anchor_size, aspect_ratios=aspect_ratios
+        )
+    else:
+        anchor_size = anchor_size[0]
+        aspect_ratios = aspect_ratios[0]
+        anchor_generator = get_anchor_generator(
+            anchor_size=anchor_size,
+            aspect_ratios=aspect_ratios,
+        )
 
     # ROI Pool
     # performing a forward pass to get the number of featuremap names

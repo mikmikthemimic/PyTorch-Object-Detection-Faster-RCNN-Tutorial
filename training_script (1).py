@@ -38,7 +38,6 @@ from pytorch_faster_rcnn_tutorial.utils import (
     collate_double,
     get_filenames_of_path,
     log_model_neptune,
-    log_model_neptune_v2,
 )
 
 from pytorch_faster_rcnn_tutorial.pl_crossvalidate.KFoldTrainer import (
@@ -368,21 +367,22 @@ def train():
         if parameters.LOG_MODEL:
             checkpoint_path = pathlib.Path(checkpoint_callback.best_model_path)
             save_directory = pathlib.Path(ROOT_PATH / "model")
-            
-            if str(checkpoint_path) == '.':
-                log_model_neptune_v2(
-                    model=model,
-                    save_directory=save_directory,
-                    name="best_model.pt",
-                    neptune_logger=neptune_logger,
-                )
-            else:
-                log_model_neptune(
-                    checkpoint_path=checkpoint_path,
-                    save_directory=save_directory,
-                    name="best_model.pt",
-                    neptune_logger=neptune_logger,
-                )
+
+            log_model_neptune(
+                model=model,
+                save_directory=save_directory,
+                name="best_model.pt",
+                neptune_path='artifacts/best_model',
+                neptune_logger=neptune_logger,
+            )
+
+            log_model_neptune(
+                model=model,
+                save_directory=save_directory,
+                name="ensemble_model.pt",
+                neptune_path='artifacts/ensemble_model',
+                neptune_logger=neptune_logger,
+            )
 
     # stop logger
     neptune_logger.experiment.stop()

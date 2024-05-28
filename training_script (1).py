@@ -94,7 +94,7 @@ class Parameters:
     Dataclass for the parameters.
     """
 
-    BATCH_SIZE: int = 6
+    BATCH_SIZE: int = 16
     CACHE: bool = False
     SAVE_DIR: Optional[
         str
@@ -104,7 +104,7 @@ class Parameters:
     # Available names are: auto, cpu, cuda, mps, tpu
     LR: float = 0.001
     PRECISION: int = 32
-    CLASSES: int = 10
+    CLASSES: int = 2
     SEED: int = 42
     MAXEPOCHS: int = 5  # 4
     FOLDS: int = 5 # 5
@@ -155,9 +155,6 @@ def train():
     mapping: Dict[str, int] = {
         "Vehicle": 1,
         "Pedestrian": 2,
-        "Enforcer": 3,
-        "Vehicle-Violator":4,
-        "Pedestrian-Violator": 5
     }
 
     # training transformations and augmentations

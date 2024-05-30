@@ -212,6 +212,7 @@ class AlbumentationWrapper(Repr):
             bbox_params=A.BboxParams(format=self.format, label_fields=["class_labels"]),
         )
 
+        print(inp)
         out_dict = transform(image=inp, bboxes=tar["boxes"], class_labels=tar["labels"])
 
         input_out = np.array(out_dict["image"])

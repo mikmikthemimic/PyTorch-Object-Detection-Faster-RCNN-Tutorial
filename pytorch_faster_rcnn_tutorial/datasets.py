@@ -120,7 +120,7 @@ class ObjectDetectionDataSet(Dataset):
         }  # all tensors should be converted to np.ndarrays
 
         if self.transform is not None:
-            print(f"Sample {target_ID} is being transformed")
+            print(f"{self.inputs[index]} is being transformed.")
             x, target = self.transform(x, target)  # returns np.ndarrays
 
         # Typecasting

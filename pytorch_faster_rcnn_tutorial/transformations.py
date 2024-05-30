@@ -181,7 +181,6 @@ class ComposeDouble(Compose):
     def __call__(self, inp: np.ndarray, target: dict):
         for t in self.transforms:
             inp, target = t(inp, target)
-            print(f"target: {target}")
         return inp, target
 
 

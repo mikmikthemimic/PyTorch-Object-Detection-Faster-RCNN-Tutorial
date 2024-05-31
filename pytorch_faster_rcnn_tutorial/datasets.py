@@ -45,6 +45,7 @@ class ObjectDetectionDataSet(Dataset):
         self.use_cache = use_cache
         self.convert_to_format = convert_to_format
         self.mapping = mapping
+        self.transformed = {}
 
         if self.use_cache:
             # Use multiprocessing to load images and targets into RAM
@@ -58,6 +59,9 @@ class ObjectDetectionDataSet(Dataset):
         return len(self.inputs)
 
     def __getitem__(self, index: int):
+        if index in self.transformed:
+            return self.transformed[index]
+
         if self.use_cache:
             x, y = self.cached_data[index]
         else:
@@ -129,12 +133,14 @@ class ObjectDetectionDataSet(Dataset):
             for key, value in target.items()
         }
 
-        return {
+        self.transformed[index] = {
             "x": x,
             "y": target,
             "x_name": self.inputs[index].name,
             "y_name": self.targets[index].name,
         }
+
+        return self.transformed[index]
 
     @staticmethod
     def read_images(inp, tar):

@@ -288,10 +288,15 @@ class FasterRCNNLightning(pl.LightningModule):
         )
 
         per_class, m_ap = metric["per_class"], metric["m_ap"]
+        if self.fold is not None:
+            self.log(f"fold{self.fold}/Test_mAP", m_ap)
         self.log("Test_mAP", m_ap)
 
         for key, value in per_class.items():
-            self.log(f"Test_AP_{key}", value["AP"])
+            if self.fold is not None:
+                self.log(f"fold{self.fold}/Test_AP_{key}", value["AP"])
+            else:
+                self.log(f"Test_AP_{key}", value["AP"])
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(

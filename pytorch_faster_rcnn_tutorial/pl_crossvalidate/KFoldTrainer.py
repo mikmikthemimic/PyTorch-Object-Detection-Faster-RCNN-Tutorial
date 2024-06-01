@@ -115,6 +115,7 @@ class KFoldTrainer(Trainer):
         results, paths = [], []
         for i in range(self.num_folds):
             self._set_fold_index(i, datamodule=datamodule)
+            model.fold = i
             print(f"===== Starting fold {i+1}/{self.num_folds} =====")
             print(f'Resetting model validation steps to empty.')
             model.validation_step_outputs = []

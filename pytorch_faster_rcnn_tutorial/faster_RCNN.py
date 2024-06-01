@@ -179,6 +179,9 @@ class FasterRCNNLightning(pl.LightningModule):
         # Saves model arguments to the ``hparams`` attribute.
         self.save_hyperparameters()
 
+        # fold
+        self.fold = None
+
         # outputs
         self.training_step_outputs = []
         self.validation_step_outputs = []
@@ -195,6 +198,8 @@ class FasterRCNNLightning(pl.LightningModule):
         loss_dict = self.model(x, y)
         loss = sum(loss for loss in loss_dict.values())
 
+        if self.fold is not None:
+            loss_dict = {f"fold{self.fold}/{key}": value for key, value in loss_dict.items()}
         self.log_dict(loss_dict)
         return loss
 

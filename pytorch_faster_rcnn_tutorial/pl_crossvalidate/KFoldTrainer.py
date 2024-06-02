@@ -113,6 +113,7 @@ class KFoldTrainer(Trainer):
 
         # run cross validation
         results, paths = [], []
+        model.neptune_logger = self.logger
         for i in range(self.num_folds):
             self._set_fold_index(i, datamodule=datamodule)
             model.fold = i

@@ -182,6 +182,9 @@ class FasterRCNNLightning(pl.LightningModule):
         # fold
         self.fold = None
 
+        # Neptune Logger
+        self.neptune_logger = None
+
         # outputs
         self.training_step_outputs = []
         self.validation_step_outputs = []
@@ -289,12 +292,19 @@ class FasterRCNNLightning(pl.LightningModule):
 
         per_class, m_ap = metric["per_class"], metric["m_ap"]
         if self.fold is not None:
-            self.log(f"fold{self.fold}/Test_mAP", m_ap)
-        self.log("Test_mAP", m_ap)
+            if self.neptune_logger is not None:
+                self.neptune_logger.experiment[f'training/Test_mAP'].append(m_ap)
+            else:
+                self.log(f"fold{self.fold}/Test_mAP", m_ap)
+        else:
+            self.log("Test_mAP", m_ap)
 
         for key, value in per_class.items():
             if self.fold is not None:
-                self.log(f"fold{self.fold}/Test_AP_{key}", value["AP"])
+                if self.neptune_logger is not None:
+                    self.neptune_logger.experiment[f'training/Test_AP_{key}'].append(value["AP"])
+                else:
+                    self.log(f"fold{self.fold}/Test_AP_{key}", value["AP"])
             else:
                 self.log(f"Test_AP_{key}", value["AP"])
 

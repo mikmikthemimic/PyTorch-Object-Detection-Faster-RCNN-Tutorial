@@ -33,6 +33,7 @@ from pytorch_faster_rcnn_tutorial.transformations import (
     ComposeDouble,
     FunctionWrapperDouble,
     normalize_01,
+    clahe,
 )
 from pytorch_faster_rcnn_tutorial.utils import (
     collate_double,
@@ -99,11 +100,11 @@ class Parameters:
         str
     ] = None  # checkpoints will be saved to cwd (current working directory) if None
     LOG_MODEL: bool = True  # whether to log the model to neptune after training
-    ACCELERATOR: Optional[str] = "cuda"  # set to "gpu" if you want to use GPU
+    ACCELERATOR: Optional[str] = "cpu"  # set to "gpu" if you want to use GPU
     # Available names are: auto, cpu, cuda, mps, tpu
     LR: float = 0.001
     PRECISION: int = 32
-    CLASSES: int = 2
+    CLASSES: int = 4
     SEED: int = 42
     MAXEPOCHS: int = 5  # 4
     FOLDS: int = 5 # 5

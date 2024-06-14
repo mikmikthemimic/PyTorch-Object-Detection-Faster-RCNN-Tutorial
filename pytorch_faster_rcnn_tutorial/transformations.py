@@ -1,3 +1,5 @@
+import os
+import cv2
 import logging
 from functools import partial
 from typing import Callable, List
@@ -36,6 +38,25 @@ def re_normalize(inp: np.ndarray, low: int = 0, high: int = 255) -> np.ndarray:
     inp_out = img_as_ubyte(inp_normalized)
     return inp_out
 
+def clahe(inp: np.ndarray) -> np.ndarray:
+    # Convert the image to LAB Color
+    lab_img = cv2.cvtColor(inp, cv2.COLOR_RGB2LAB)
+
+    # Split the LAB image into L, A, and B channels
+    lab_planes = cv2.split(lab_img) 
+
+    # Apply CLAHE to L channel
+    clahe = cv2.createCLAHE(clipLimit=0.90, tileGridSize=(35, 35))
+    clahe_images = [clahe.apply(plane) for plane in lab_planes]
+    
+
+    # Combine the CLAHE enhanced L-channel with A and B channels
+    updated_lab_img2 = cv2.merge(clahe_images)
+
+    # Convert LAB image back to RGB color space
+    processed_rgb_img = cv2.cvtColor(updated_lab_img2, cv2.COLOR_LAB2RGB)
+
+    return processed_rgb_img
 
 def clip_bbs(inp: np.ndarray, bbs: np.ndarray) -> np.array:
     """

@@ -13,6 +13,7 @@ from pytorch_faster_rcnn_tutorial.transformations import (
     ComposeDouble,
     ComposeSingle,
     map_class_to_int,
+    clahe
 )
 from pytorch_faster_rcnn_tutorial.utils import read_json
 
@@ -71,6 +72,8 @@ class ObjectDetectionDataSet(Dataset):
         # From RGBA to RGB
         if x.shape[-1] == 4:
             x = rgba2rgb(x)
+        
+        x = clahe(x)
 
         # Read boxes
         try:

@@ -81,6 +81,8 @@ class BackboneWithFPN(nn.Module):
             b, c, h, w = v.shape
             x_h = self.pool_h(v)
             x_w = self.pool_w(v)
+            print("Shape of x_h after pooling:", x_h.shape)
+            print("Shape of x_w after pooling:", x_w.shape)
             y = torch.cat([x_h, x_w], dim=1)
             y = self.conv1(y)
             y = self.bn1(y)

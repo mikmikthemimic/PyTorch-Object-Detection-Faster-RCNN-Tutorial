@@ -11,7 +11,7 @@ from torchvision.models._utils import IntermediateLayerGetter
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops.feature_pyramid_network import ExtraFPNBlock, FeaturePyramidNetwork
 
-from pytorch_faster_rcnn_tutorial.CoordAttention import CoordAtt
+from pytorch_faster_rcnn_tutorial.CoordAttention import CoordinateAttention
 
 logger: logging.Logger = logging.getLogger(__name__)
 

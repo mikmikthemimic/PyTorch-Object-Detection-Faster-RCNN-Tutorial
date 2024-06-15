@@ -92,7 +92,8 @@ class BackboneWithFPN(nn.Module):
 
     def forward(self, x):
         #x = torch.randn(2, 64, 32, 32)
-        attn = CoordinateAttention(64, 64)
+        b,c,h,w = x.shape
+        attn = CoordinateAttention(c, c)
         x = attn(x)
 
         x = self.body(x)

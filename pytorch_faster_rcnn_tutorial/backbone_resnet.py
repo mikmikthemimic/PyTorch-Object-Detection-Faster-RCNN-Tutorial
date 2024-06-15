@@ -91,7 +91,7 @@ class BackboneWithFPN(nn.Module):
         self.out_channels = out_channels
 
     def forward(self, x):
-        x = torch.randn(2, 64, 32, 32)
+        x = torch.randn(in_channels_list, 64, 32, 32)
         attn = CoordinateAttention(64, 64)
         y = attn(x)
 

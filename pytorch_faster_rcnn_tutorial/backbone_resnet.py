@@ -77,6 +77,7 @@ class BackboneWithFPN(nn.Module):
         
         # Coordinate Attention
         for k, v in x.items():
+            print("Shape of v before pooling:", v.shape)
             b, c, h, w = v.size()
             x_h = self.pool_h(v)
             x_w = self.pool_w(v)

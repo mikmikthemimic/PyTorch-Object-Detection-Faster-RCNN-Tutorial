@@ -77,17 +77,18 @@ class BackboneWithFPN(nn.Module):
         
         # Coordinate Attention
         for k, v in x.items():
-            h = self.pool_h(v)
-            w = self.pool_w(v)
-            h = self.conv1(h)
-            h = self.bn1(h)
-            h = self.act(h)
-            h = self.conv_h(h)
-            w = self.conv1(w)
-            w = self.bn1(w)
-            w = self.act(w)
-            w = self.conv_w(w)
-            x[k] = v + h + w
+            b, c, h, w = v.size()
+            x_h = self.pool_h(v)
+            x_w = self.pool_w(v)
+            y = torch.cat([x_h, x_w], dim=1)
+            y = self.conv1(y)
+            y = self.bn1(y)
+            y = self.act(y)
+            x_h, x_w = torch.split(y, [h, w], dim=2)
+            x_w = x_w.transpose(-1, -2)
+            a_h = self.conv_h(x_h)
+            a_w = self.conv_w(x_w)
+            x[k] = v * a_h * a_w
         # Coordinate Attention
 
         x = self.fpn(x)

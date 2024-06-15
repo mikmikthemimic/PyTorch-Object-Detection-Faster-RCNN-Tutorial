@@ -11,7 +11,7 @@ from torchvision.models._utils import IntermediateLayerGetter
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops.feature_pyramid_network import ExtraFPNBlock, FeaturePyramidNetwork
 
-from pytorch_faster_rcnn_tutorial.CoordAttention import CoordAtt
+from pytorch_faster_rcnn_tutorial.CoordAttention import CoordinateAttention
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -91,10 +91,9 @@ class BackboneWithFPN(nn.Module):
         self.out_channels = out_channels
 
     def forward(self, x):
-        #b,c,h,w = x.shape
-        #attn = CoordinateAttention(c, c)
-        #x = attn(x)
-        x = CoordAtt(x)
+        x = torch.randn(2, 64, 32, 32)
+        attn = CoordinateAttention(64, 64)
+        y = attn(x)
 
         x = self.body(x)
         x = self.fpn(x)

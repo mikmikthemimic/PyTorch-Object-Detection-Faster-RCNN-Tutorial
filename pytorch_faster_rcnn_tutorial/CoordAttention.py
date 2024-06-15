@@ -1,34 +1,31 @@
-import os
+import torch
+from torch import nn
 
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
-import tensorflow as tf
-import tf_slim as slim
-
-
-def CoordAtt(x, reduction = 32):
-
-    def coord_act(x):
-        tmpx = tf.nn.relu6(x+3) / 6
-        x = x * tmpx
-        return x
-
-    x_shape = tf.shape(x).as_list()
-    [b, h, w, c] = x_shape
-    x_h = slim.avg_pool2d(x, kernel_size = [1, w], stride = 1)
-    x_w = slim.avg_pool2d(x, kernel_size = [h, 1], stride = 1)
-    x_w = tf.transpose(x_w, [0, 2, 1, 3])
-
-    y = tf.concat([x_h, x_w], axis=1)
-    mip = max(8, c // reduction)
-    y = slim.conv2d(y, mip, (1, 1), stride=1, padding='VALID', normalizer_fn = slim.batch_norm, activation_fn=coord_act,scope='ca_conv1')
-
-    x_h, x_w = tf.split(y, num_or_size_splits=2, axis=1)
-    x_w = tf.transpose(x_w, [0, 2, 1, 3])
-    a_h = slim.conv2d(x_h, c, (1, 1), stride=1, padding='VALID', normalizer_fn = None, activation_fn=tf.nn.sigmoid,scope='ca_conv2')
-    a_w = slim.conv2d(x_w, c, (1, 1), stride=1, padding='VALID', normalizer_fn = None, activation_fn=tf.nn.sigmoid,scope='ca_conv3')
-
-    out = x * a_h * a_w
-
-
-    return out
+class CoordinateAttention(nn.Module):
+    def __init__(self, in_dim, out_dim, reduction=32):
+        super().__init__()
+        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
+        self.pool_w = nn.AdaptiveAvgPool2d((1, None))
+        hidden_dim = max(8, in_dim // reduction)
+        self.conv1 = nn.Conv2d(in_dim, hidden_dim, kernel_size=1, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(hidden_dim)
+        self.act = nn.ReLU(inplace=True)
+        self.conv_h = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0)
+        self.conv_w = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0)
+        
+    def forward(self, x):
+        identity = x
+        b,c,h,w = x.shape
+        x_h = self.pool_h(x)
+        x_w = self.pool_w(x).transpose(-1, -2)
+        y = torch.cat([x_h, x_w], dim=2)
+        y = self.conv1(y)
+        y = self.bn1(y)
+        y = self.act(y)
+        x_h, x_w = torch.split(y, [h, w], dim=2)
+        x_w = x_w.transpose(-1, -2)
+        a_h = self.conv_h(x_h)
+        a_w = self.conv_w(x_w)
+        out = identity * a_h * a_w
+        return out
+    

@@ -201,7 +201,6 @@ strict-rfc3339
 superqt
 swagger-spec-validator
 sympy
-tensorflow
 terminado
 threadpoolctl
 tifffile

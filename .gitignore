@@ -14,3 +14,5 @@ pytorch_faster_rcnn_tutorial/data/heads_*/*
 pytorch_faster_rcnn_tutorial/data/heads/removing enforcers.py
 pytorch_faster_rcnn_tutorial/data/heads/fix annotations.py
 /predictions
+/predictions_original
+/predictions - Copy

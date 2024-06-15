@@ -13,7 +13,7 @@ def CoordAtt(x, reduction = 32):
         x = x * tmpx
         return x
 
-    x_shape = tf.get_shape(x).as_list()
+    x_shape = tf.shape(x).as_list()
     [b, h, w, c] = x_shape
     x_h = slim.avg_pool2d(x, kernel_size = [1, w], stride = 1)
     x_w = slim.avg_pool2d(x, kernel_size = [h, 1], stride = 1)

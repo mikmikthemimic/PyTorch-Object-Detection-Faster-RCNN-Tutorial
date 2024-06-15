@@ -58,8 +58,8 @@ class BackboneWithFPN(nn.Module):
         self.out_channels = out_channels
 
         # Coordinate Attention
-        in_dim = 64
-        out_dim = 64
+        in_dim = 128
+        out_dim = 128
         reduction = 32
 
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))

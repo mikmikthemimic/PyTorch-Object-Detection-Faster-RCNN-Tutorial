@@ -78,7 +78,7 @@ class BackboneWithFPN(nn.Module):
         # Coordinate Attention
         for k, v in x.items():
             print("Shape of v before pooling:", v.shape)
-            b, c, h, w = v.shape()
+            b, c, h, w = v.shape
             x_h = self.pool_h(v)
             x_w = self.pool_w(v)
             y = torch.cat([x_h, x_w], dim=1)

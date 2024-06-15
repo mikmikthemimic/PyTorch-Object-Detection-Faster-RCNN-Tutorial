@@ -1,6 +1,5 @@
 import logging
 from enum import Enum
-from re import X
 from typing import Dict, List, Optional
 
 import torch
@@ -23,6 +22,7 @@ class ResNetBackbones(Enum):
     RESNET101 = "resnet101"
     RESNET152 = "resnet152"
 
+<<<<<<< HEAD
 #class CoordinateAttention(nn.Module):
 #    def __init__(self, in_dim, out_dim, reduction=32):
 #        super().__init__()
@@ -53,6 +53,8 @@ class ResNetBackbones(Enum):
 
 
 
+=======
+>>>>>>> parent of efe558a (eto na yata idk)
 class BackboneWithFPN(nn.Module):
     """
     Adds a FPN on top of a model.
@@ -90,12 +92,50 @@ class BackboneWithFPN(nn.Module):
         )
         self.out_channels = out_channels
 
+<<<<<<< HEAD
     def forward(self, x):
         #x = torch.randn(2, 64, 32, 32)
         attn = CoordinateAttention(64, 64)
         x = attn(x)
+=======
+        # Coordinate Attention
+        in_dim = 128
+        out_dim = 128
+        reduction = 32
+>>>>>>> parent of efe558a (eto na yata idk)
 
+        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
+        self.pool_w = nn.AdaptiveAvgPool2d((1, None))
+        hidden_dim = max(8, in_dim // reduction)
+        self.conv1 = nn.Conv2d(in_dim, hidden_dim, kernel_size=1, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(hidden_dim)
+        self.act = nn.ReLU(inplace=True)
+        self.conv_h = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0)
+        self.conv_w = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0)
+        # Coordinate Attention
+
+    def forward(self, x):
         x = self.body(x)
+        
+        # Coordinate Attention
+        for k, v in x.items():
+            print("Shape of v before pooling:", v.shape)
+            b, c, h, w = v.shape
+            x_h = self.pool_h(v)
+            x_w = self.pool_w(v)
+            print("Shape of x_h after pooling:", x_h.shape)
+            print("Shape of x_w after pooling:", x_w.shape)
+            y = torch.cat([x_h, x_w], dim=1)
+            y = self.conv1(y)
+            y = self.bn1(y)
+            y = self.act(y)
+            x_h, x_w = torch.split(y, [h, w], dim=2)
+            x_w = x_w.transpose(-1, -2)
+            a_h = self.conv_h(x_h)
+            a_w = self.conv_w(x_w)
+            x[k] = v * a_h * a_w
+        # Coordinate Attention
+
         x = self.fpn(x)
         return x
 

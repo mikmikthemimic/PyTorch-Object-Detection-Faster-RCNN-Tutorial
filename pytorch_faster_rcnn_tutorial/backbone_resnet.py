@@ -93,7 +93,7 @@ class BackboneWithFPN(nn.Module):
     def forward(self, x):
         #b,c,h,w = x.shape
         #attn = CoordinateAttention(c, c)
-        x = attn(x)
+        #x = attn(x)
         x = CoordAtt(x)
 
         x = self.body(x)

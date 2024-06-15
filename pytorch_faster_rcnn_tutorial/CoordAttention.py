@@ -3,7 +3,7 @@ import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import tensorflow as tf
-#import tensorflow.contrib.slim as slim
+import tf_slim as slim
 
 
 def CoordAtt(x, reduction = 32):
@@ -13,7 +13,7 @@ def CoordAtt(x, reduction = 32):
         x = x * tmpx
         return x
 
-    x_shape = x.size().as_list()
+    x_shape = x.get_shape().as_list()
     [b, h, w, c] = x_shape
     x_h = slim.avg_pool2d(x, kernel_size = [1, w], stride = 1)
     x_w = slim.avg_pool2d(x, kernel_size = [h, 1], stride = 1)

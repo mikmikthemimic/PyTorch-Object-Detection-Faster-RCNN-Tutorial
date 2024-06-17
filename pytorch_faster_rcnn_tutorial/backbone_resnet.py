@@ -180,6 +180,9 @@ def resnet_fpn_backbone(
         pretrained=pretrained, norm_layer=norm_layer
     )
 
+    if torch.cuda.is_available():
+        backbone = backbone.cuda()
+
     # select layers that wont be frozen
     assert trainable_layers <= 5 and trainable_layers >= 0
     layers_to_train = ["layer4", "layer3", "layer2", "layer1", "conv1"][

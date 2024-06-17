@@ -25,29 +25,31 @@ class ResNetBackbones(Enum):
 class CA(nn.Module):
     def __init__(self, in_dim, out_dim, reduction=32):
         super().__init__()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
         hidden_dim = max(8, in_dim // reduction)
-        self.conv1 = nn.Conv2d(in_dim, hidden_dim, kernel_size=1, stride=1, padding=0)
-        self.bn1 = nn.BatchNorm2d(hidden_dim)
-        self.act = nn.ReLU(inplace=True)
-        self.conv_h = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0)
-        self.conv_w = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0)
+        self.conv1 = nn.Conv2d(in_dim, hidden_dim, kernel_size=1, stride=1, padding=0).cuda()
+        self.bn1 = nn.BatchNorm2d(hidden_dim).cuda()
+        self.act = nn.ReLU(inplace=True).cuda()
+        self.conv_h = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0).cuda()
+        self.conv_w = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0).cuda()
         
     def forward(self, x):
+        dtype=torch.cuda.FloatTensor
+        x=torch.autograd.Variable(x.type(dtype))
         identity = x
         b,c,h,w = x.shape
-        x_h = self.pool_h(x)
-        x_w = self.pool_w(x).transpose(-1, -2)
-        y = torch.cat([x_h, x_w], dim=2).to(self.device)
-        y = self.conv1(y)
-        y = self.bn1(y)
-        y = self.act(y)
-        x_h, x_w = torch.split(y, [h, w], dim=2).to(self.device)
+        x_h = self.pool_h(x).cuda()
+        x_w = self.pool_w(x).transpose(-1, -2).cuda()
+        y = torch.cat([x_h, x_w], dim=2).cuda()
+        y = self.conv1(y).cuda()
+        y = self.bn1(y).cuda()
+        y = self.act(y).cuda()
+        x_h, x_w = torch.split(y, [h, w], dim=2)
         x_w = x_w.transpose(-1, -2)
-        a_h = self.conv_h(x_h)
-        a_w = self.conv_w(x_w)
+        a_h = self.conv_h(x_h).cuda()
+        a_w = self.conv_w(x_w).cuda()
         out = identity * a_h * a_w
         return out
 
@@ -95,9 +97,13 @@ class BackboneWithFPN(nn.Module):
         b,c,h,w = x.shape
         attn = CA(c, c)
         x = attn(x)
-        #x = x.to(self.device)
+        x = x.cuda()
 
         x = self.body(x)
+        for key,value in x.items():
+          x[key] = value.cuda()
+        
+        
         x = self.fpn(x)
         return x
 
@@ -201,10 +207,133 @@ def resnet_fpn_backbone(
     in_channels_stage2 = backbone.inplanes // 8
     in_channels_list = [in_channels_stage2 * 2 ** (i - 1) for i in returned_layers]
     out_channels = 256
-    return BackboneWithFPN(
+
+    modelBackbone = BackboneWithFPN(
         backbone=backbone,
         return_layers=return_layers,
         in_channels_list=in_channels_list,
         out_channels=out_channels,
         extra_blocks=extra_blocks,
     )
+    if torch.cuda.is_available():
+        modelBackbone.cuda()
+    return modelBackbone()
+
+""""The autoreload extension is already loaded. To reload it, use:
+  %reload_ext autoreload
+---------------------------------------------------------------------------
+RuntimeError                              Traceback (most recent call last)
+<ipython-input-33-e821e87fe13c> in <cell line: 15>()
+     13 
+     14 # model init
+---> 15 model: FasterRCNN = get_faster_rcnn_resnet(
+     16     num_classes=parameters.CLASSES,
+     17     backbone_name=parameters.BACKBONE,
+
+14 frames
+/content/PyTorch-Object-Detection-Faster-RCNN-Tutorial/pytorch_faster_rcnn_tutorial/faster_RCNN.py in get_faster_rcnn_resnet(num_classes, backbone_name, anchor_size, aspect_ratios, fpn, min_size, max_size, **kwargs)
+    131         backbone.eval()
+    132         random_input = torch.rand(size=(1, 3, 512, 512))
+--> 133         features = backbone(random_input)
+    134 
+    135     if isinstance(features, torch.Tensor):
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _wrapped_call_impl(self, *args, **kwargs)
+   1530             return self._compiled_call_impl(*args, **kwargs)  # type: ignore[misc]
+   1531         else:
+-> 1532             return self._call_impl(*args, **kwargs)
+   1533 
+   1534     def _call_impl(self, *args, **kwargs):
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _call_impl(self, *args, **kwargs)
+   1539                 or _global_backward_pre_hooks or _global_backward_hooks
+   1540                 or _global_forward_hooks or _global_forward_pre_hooks):
+-> 1541             return forward_call(*args, **kwargs)
+   1542 
+   1543         try:
+
+/content/PyTorch-Object-Detection-Faster-RCNN-Tutorial/pytorch_faster_rcnn_tutorial/backbone_resnet.py in forward(self, x)
+    105 
+    106 
+--> 107         x = self.fpn(x)
+    108         for key,value in x.items():
+    109           x[key] = value.cuda()
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _wrapped_call_impl(self, *args, **kwargs)
+   1530             return self._compiled_call_impl(*args, **kwargs)  # type: ignore[misc]
+   1531         else:
+-> 1532             return self._call_impl(*args, **kwargs)
+   1533 
+   1534     def _call_impl(self, *args, **kwargs):
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _call_impl(self, *args, **kwargs)
+   1539                 or _global_backward_pre_hooks or _global_backward_hooks
+   1540                 or _global_forward_hooks or _global_forward_pre_hooks):
+-> 1541             return forward_call(*args, **kwargs)
+   1542 
+   1543         try:
+
+/usr/local/lib/python3.10/dist-packages/torchvision/ops/feature_pyramid_network.py in forward(self, x)
+    185         x = list(x.values())
+    186 
+--> 187         last_inner = self.get_result_from_inner_blocks(x[-1], -1)
+    188         results = []
+    189         results.append(self.get_result_from_layer_blocks(last_inner, -1))
+
+/usr/local/lib/python3.10/dist-packages/torchvision/ops/feature_pyramid_network.py in get_result_from_inner_blocks(self, x, idx)
+    153         for i, module in enumerate(self.inner_blocks):
+    154             if i == idx:
+--> 155                 out = module(x)
+    156         return out
+    157 
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _wrapped_call_impl(self, *args, **kwargs)
+   1530             return self._compiled_call_impl(*args, **kwargs)  # type: ignore[misc]
+   1531         else:
+-> 1532             return self._call_impl(*args, **kwargs)
+   1533 
+   1534     def _call_impl(self, *args, **kwargs):
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _call_impl(self, *args, **kwargs)
+   1539                 or _global_backward_pre_hooks or _global_backward_hooks
+   1540                 or _global_forward_hooks or _global_forward_pre_hooks):
+-> 1541             return forward_call(*args, **kwargs)
+   1542 
+   1543         try:
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/container.py in forward(self, input)
+    215     def forward(self, input):
+    216         for module in self:
+--> 217             input = module(input)
+    218         return input
+    219 
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _wrapped_call_impl(self, *args, **kwargs)
+   1530             return self._compiled_call_impl(*args, **kwargs)  # type: ignore[misc]
+   1531         else:
+-> 1532             return self._call_impl(*args, **kwargs)
+   1533 
+   1534     def _call_impl(self, *args, **kwargs):
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py in _call_impl(self, *args, **kwargs)
+   1539                 or _global_backward_pre_hooks or _global_backward_hooks
+   1540                 or _global_forward_hooks or _global_forward_pre_hooks):
+-> 1541             return forward_call(*args, **kwargs)
+   1542 
+   1543         try:
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/conv.py in forward(self, input)
+    458 
+    459     def forward(self, input: Tensor) -> Tensor:
+--> 460         return self._conv_forward(input, self.weight, self.bias)
+    461 
+    462 class Conv3d(_ConvNd):
+
+/usr/local/lib/python3.10/dist-packages/torch/nn/modules/conv.py in _conv_forward(self, input, weight, bias)
+    454                             weight, bias, self.stride,
+    455                             _pair(0), self.dilation, self.groups)
+--> 456         return F.conv2d(input, weight, bias, self.stride,
+    457                         self.padding, self.dilation, self.groups)
+    458 
+
+RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same"""

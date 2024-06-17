@@ -4,6 +4,7 @@ from torch import nn
 class CoordinateAttention(nn.Module):
     def __init__(self, in_dim, out_dim, reduction=32):
         super().__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
         hidden_dim = max(8, in_dim // reduction)

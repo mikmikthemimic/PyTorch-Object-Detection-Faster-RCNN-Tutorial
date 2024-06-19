@@ -124,6 +124,7 @@ class KFoldTrainer(Trainer):
 
             fold_path = osp.join(self.model_directory, f"fold_{i}.ckpt")
             self.save_checkpoint(fold_path)
+            self.logger.experiment['training/fold'] = i
             self.logger.experiment[f'artifacts/folds/fold_{i}'].upload(str(fold_path))
             paths.append(fold_path)
 

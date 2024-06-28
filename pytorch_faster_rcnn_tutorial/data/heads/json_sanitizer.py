@@ -6,6 +6,7 @@ files = glob('target/*.json')
 files.extend(glob('test_targets/*.json'))
 
 for file in files:
+    print(f'Checking {file}...')
     with open(file, 'r') as f:
         data = json.load(f)
         for i in range(len(data['labels'])):

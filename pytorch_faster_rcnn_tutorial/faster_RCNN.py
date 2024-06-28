@@ -313,7 +313,7 @@ class FasterRCNNLightning(pl.LightningModule):
             self.model.parameters(), lr=self.lr, momentum=0.9, weight_decay=0.005
         )
         lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode="max", factor=0.75, patience=30, min_lr=0
+            optimizer, mode="max", factor=0.80, patience=2, min_lr=0.001
         )
         return {
             "optimizer": optimizer,

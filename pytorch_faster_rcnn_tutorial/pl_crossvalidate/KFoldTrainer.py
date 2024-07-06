@@ -49,6 +49,7 @@ class KFoldTrainer(Trainer):
         # Intialize rest of the trainer
         super().__init__(*args, **kwargs)
         self._version = self.logger.version
+        self.fold_index = None
 
     def _construct_kfold_datamodule(
         self,
@@ -115,6 +116,8 @@ class KFoldTrainer(Trainer):
         results, paths = [], []
         model.neptune_logger = self.logger
         for i in range(self.num_folds):
+            if self.fold_index is not None:
+                i = self.fold_index
             self._set_fold_index(i, datamodule=datamodule)
             model.fold = i
             print(f"===== Starting fold {i+1}/{self.num_folds} =====")
@@ -133,6 +136,9 @@ class KFoldTrainer(Trainer):
 
         self._ensemple_paths = paths
         return results
+
+    def set_resume_index(self, index):
+        self.fold_index = index
 
     def _set_fold_index(self, fold_index: int, datamodule: KFoldDataModule) -> None:
         # any logger need to be reset to the new fold index and the privious experiment needs to be cleared

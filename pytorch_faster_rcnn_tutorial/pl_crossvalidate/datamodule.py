@@ -111,6 +111,9 @@ class KFoldDataModule(LightningDataModule):
             self.train_dataset = self.datamodule.train_dataloader().dataset
             self.splits = [split for split in splitter.split(range(len(self.train_dataset)), y=labels)]
 
+    def set_fold_index(self, index) -> None:
+        self.fold_index = index
+
     def train_dataloader(self) -> DataLoader:
         """Return training dataloader on the current fold."""
         self.setup_folds()

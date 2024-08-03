@@ -24,11 +24,15 @@ def main():
     # input and target files
     predictions = get_filenames_of_path(DATA_PATH / "predictions")
     predictions.sort()
+    # test-target files
+    gt_predictions = get_filenames_of_path(DATA_PATH / "test_targets")
+    gt_predictions.sort()
 
-    # get the gt_boxes from disk
+
+    # get the gt_boxes from disk  || test-targets
     gt_boxes = [
         from_file_to_boundingbox(file_name, groundtruth=True)
-        for file_name in predictions
+        for file_name in gt_predictions
     ]
     # reduce list
     gt_boxes = list(chain(*gt_boxes))

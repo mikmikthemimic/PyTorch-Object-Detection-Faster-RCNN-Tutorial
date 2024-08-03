@@ -16,14 +16,12 @@ labels = {
     1: 'Vehicle',
     2: 'Pedestrian',
     3: 'Bicycle',
-    4: 'Motorcycle',
-    5: 'Tricycle',
     99: 'Unknown'
 }
 
 # best setting
-IOU_THRESHOLD = 0.15
-SCORE_THRESHOLD = 0.25
+IOU_THRESHOLD = 0.35
+SCORE_THRESHOLD = 0.55
 
 USE_NMS = True
 

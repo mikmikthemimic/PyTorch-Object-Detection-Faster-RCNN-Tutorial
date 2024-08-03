@@ -9,7 +9,7 @@ from torchvision.models import resnet
 from torchvision.models._utils import IntermediateLayerGetter
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops.feature_pyramid_network import ExtraFPNBlock, FeaturePyramidNetwork
-
+from torchvision.ops import SqueezeExcitation as SENet
 from pytorch_faster_rcnn_tutorial.CoordAttention import CoordinateAttention
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -21,38 +21,6 @@ class ResNetBackbones(Enum):
     RESNET50 = "resnet50"
     RESNET101 = "resnet101"
     RESNET152 = "resnet152"
-
-class CA(nn.Module):
-    def __init__(self, in_dim, out_dim, reduction=32):
-        super().__init__()
-        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
-        self.pool_w = nn.AdaptiveAvgPool2d((1, None))
-        hidden_dim = max(8, in_dim // reduction)
-        self.conv1 = nn.Conv2d(in_dim, hidden_dim, kernel_size=1, stride=1, padding=0).cuda()
-        self.bn1 = nn.BatchNorm2d(hidden_dim).cuda()
-        self.act = nn.ReLU(inplace=True).cuda()
-        self.conv_h = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0).cuda()
-        self.conv_w = nn.Conv2d(hidden_dim, out_dim, kernel_size=1, stride=1, padding=0).cuda()
-        
-    def forward(self, x):
-        dtype=torch.cuda.FloatTensor
-        x=torch.autograd.Variable(x.type(dtype))
-        identity = x
-        b,c,h,w = x.shape
-        x_h = self.pool_h(x).cuda()
-        x_w = self.pool_w(x).transpose(-1, -2).cuda()
-        y = torch.cat([x_h, x_w], dim=2).cuda()
-        y = self.conv1(y).cuda()
-        y = self.bn1(y).cuda()
-        y = self.act(y).cuda()
-        x_h, x_w = torch.split(y, [h, w], dim=2)
-        x_w = x_w.transpose(-1, -2)
-        a_h = self.conv_h(x_h).cuda()
-        a_w = self.conv_w(x_w).cuda()
-        out = identity * a_h * a_w
-        return out
-
 
 class BackboneWithFPN(nn.Module):
     """
@@ -82,7 +50,6 @@ class BackboneWithFPN(nn.Module):
         extra_blocks: Optional[ExtraFPNBlock] = None,
     ):
         super(BackboneWithFPN, self).__init__()
-        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.body = IntermediateLayerGetter(model=backbone, return_layers=return_layers)
         self.fpn = FeaturePyramidNetwork(
@@ -93,15 +60,14 @@ class BackboneWithFPN(nn.Module):
         self.out_channels = out_channels
 
     def forward(self, x):
-        #x = torch.randn(2, 64, 32, 32)
         b,c,h,w = x.shape
-        attn = CA(c, c)
-        x = attn(x)
-        x = x.cuda()
-
         x = self.body(x)
         for key,value in x.items():
-          x[key] = value.cuda()
+            #SE Block
+            se_block = SENet(value.size(1), reduction_ratio=16)
+            x[key] = se_block(value)
+            x[key] = x[key].cuda()
+            #x[key] = value.cuda()
         
         
         x = self.fpn(x)

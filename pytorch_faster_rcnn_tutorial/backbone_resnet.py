@@ -60,11 +60,13 @@ class BackboneWithFPN(nn.Module):
         self.out_channels = out_channels
 
     def forward(self, x):
-        b,c,h,w = x.shape
+        #b,c,h,w = x.shape
+        x = x.cuda()
         x = self.body(x)
         for key,value in x.items():
             #SE Block
-            se_block = SENet(value.size(1), reduction_ratio=16)
+            num_input_channels = value.shape[1]
+            se_block = SENet(input_channels=num_input_channels, squeeze_channels=value.shape[1]).cuda()
             x[key] = se_block(value)
             x[key] = x[key].cuda()
             #x[key] = value.cuda()

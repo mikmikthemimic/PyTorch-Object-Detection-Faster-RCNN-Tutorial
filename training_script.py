@@ -7,7 +7,8 @@ from typing import Dict, List, Optional, Tuple
 import albumentations
 import numpy as np
 
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings 
+from pydantic import Field
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import (
     EarlyStopping,

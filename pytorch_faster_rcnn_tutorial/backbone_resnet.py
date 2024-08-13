@@ -14,6 +14,7 @@ from pytorch_faster_rcnn_tutorial.CoordAttention import CoordinateAttention
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+# test
 
 class ResNetBackbones(Enum):
     RESNET18 = "resnet18"

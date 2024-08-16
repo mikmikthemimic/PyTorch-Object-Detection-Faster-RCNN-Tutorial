@@ -20,8 +20,8 @@ labels = {
 }
 
 # best setting
-IOU_THRESHOLD = 0.35
-SCORE_THRESHOLD = 0.55
+IOU_THRESHOLD = 0.50
+SCORE_THRESHOLD = 0.50
 
 USE_NMS = True
 

@@ -118,6 +118,13 @@ def get_pascalvoc_metrics(
     gt_classes_only = list(set(gt_classes_only))
     for bb in det_boxes:
         c = bb.get_class_id()
+        confidence_score = bb.get_confidence()
+        if c == 'Vehicle' and confidence_score < 0.5:
+            continue
+        elif c == 'Pedestrian' and confidence_score < 0.2:
+            continue
+        elif c == 'Bicycle' and confidence_score < 0.2:
+            continue
         classes_bbs.setdefault(c, {"gt": [], "det": []})
         classes_bbs[c]["det"].append(bb)
 
@@ -152,6 +159,19 @@ def get_pascalvoc_metrics(
         # Loop through detections
         for idx_det, det in enumerate(dects):
             img_det = det.get_image_name()
+            
+            # img_det = literal name ng image lol
+
+            #confidence = det.get_confidence()
+
+            ## DOESN'T WORK
+            ## Insert confidence condition here
+            #if img_det == 'Vehicle' and confidence < 0.5:
+            #    continue
+            #elif img_det == 'Pedestrian' and confidence < 0.2:
+            #    continue
+            #elif img_det == 'Bicycle' and confidence < 0.2:
+            #    continue
 
             if generate_table:
                 dict_table["image"].append(img_det)

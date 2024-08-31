@@ -207,23 +207,15 @@ def log_mapping_neptune(mapping: dict, neptune_logger):
     log_table(name="mapping", table=mapping_df, experiment=neptune_logger.experiment)
 
 def log_model_neptune(
-<<<<<<< Updated upstream
         model: FasterRCNN,
         save_directory: pathlib.Path,
         name: str,
         neptune_path: str,
         neptune_logger
-=======
-    checkpoint_path: pathlib.Path,
-    save_directory: ROOT_PATH / "model",
-    name: str,
-    neptune_logger,
->>>>>>> Stashed changes
 ):
     """
     Saves the model to disk, uploads it to neptune and removes it again.
     """
-<<<<<<< Updated upstream
     model_save_path = str(save_directory / name)
     
     if not save_directory.exists():
@@ -242,18 +234,6 @@ def log_model_neptune(
     
     neptune_logger.experiment["properties/checkpoint_name"] = 'N/A. Using model directly.'
     neptune_logger.experiment[neptune_path].upload(str(model_save_path))
-=======
-    checkpoint = torch.load(checkpoint_path)
-    model = checkpoint["hyper_parameters"]["model"]
-    torch.save(model.state_dict(), str(name))
-    #neptune_logger.set_property("checkpoint_name", checkpoint_path.name)
-    neptune_logger.experiment["properties/checkpoint_name"] = str(checkpoint_path.name)
-    #neptune_logger.experiment.log_artifact(str(save_directory / name))
-    neptune_logger.experiment["artifacts/model"].upload(str(name))
-    if os.path.isfile(name):
-        os.remove(name)
-
->>>>>>> Stashed changes
 
 def log_checkpoint_neptune(checkpoint_path: pathlib.Path, neptune_logger):
     #neptune_logger.experiment.set_property("checkpoint_name", checkpoint_path.name)

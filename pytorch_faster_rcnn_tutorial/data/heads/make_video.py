@@ -19,9 +19,10 @@ labels = {
     99: 'Unknown'
 }
 
+
 # best setting
-IOU_THRESHOLD = 0.50
-SCORE_THRESHOLD = 0.50
+IOU_THRESHOLD = 0.70
+#SCORE_THRESHOLD = 0.50
 
 USE_NMS = True
 
@@ -52,8 +53,8 @@ for i in range(len(predictions)):
 
         for j in range(len(data['labels'])):
             confidence = data['scores'][j]
-            if confidence < SCORE_THRESHOLD:
-                continue
+            #if confidence < SCORE_THRESHOLD:
+            #    continue
 
             label = data['labels'][j]
             box = [math.trunc(float(i)) for i in data['boxes'][j]]
@@ -64,12 +65,18 @@ for i in range(len(predictions)):
 
             match labels[label]:
                 case 'Vehicle':
+                    if confidence < 0.5:
+                        continue
                     bnd_color = (0, 0, 139)
                     text_color = (0, 0, 255)
                 case 'Pedestrian':
+                    if confidence < 0.2:
+                        continue
                     bnd_color = (0, 255, 0)
                     text_color = (1, 250, 32)
-                case _:
+                case 'Bicycle':
+                    if confidence < 0.2:
+                        continue
                     bnd_color = (255, 0, 0)
                     text_color = (36, 255, 12)
             

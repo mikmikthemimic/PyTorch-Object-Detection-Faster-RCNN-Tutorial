@@ -37,6 +37,7 @@ croniter
 cycler
 dask[array]
 dateutils
+dearpygui
 debugpy
 decorator
 deepdiff

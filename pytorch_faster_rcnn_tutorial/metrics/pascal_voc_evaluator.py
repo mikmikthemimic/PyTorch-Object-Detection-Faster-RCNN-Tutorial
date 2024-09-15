@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from metrics.bounding_box import BoundingBox
-from metrics.enumerators import MethodAveragePrecision
+from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
+from pytorch_faster_rcnn_tutorial.metrics.enumerators import MethodAveragePrecision
 
 logger: logging.Logger = logging.getLogger(__name__)
 

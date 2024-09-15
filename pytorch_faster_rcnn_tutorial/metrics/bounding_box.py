@@ -1,12 +1,12 @@
 import logging
 from typing import Optional
 
-from metrics.enumerators import (       #pytorch_faster_rcnn_tutorial.
+from pytorch_faster_rcnn_tutorial.metrics.enumerators import (       #pytorch_faster_rcnn_tutorial.
     BBFormat,
     BBType,
     CoordinatesType,
 )
-from metrics.general_utils import (
+from pytorch_faster_rcnn_tutorial.metrics.general_utils import (
     convert_to_absolute_values,
     convert_to_relative_values,
 )

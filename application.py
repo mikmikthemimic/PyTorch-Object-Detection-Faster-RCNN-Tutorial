@@ -14,6 +14,9 @@ def select_image(sender, app_data, user_data):
         dpg.delete_item("image_tag")
         dpg.delete_item("texture_tag")
 
+    print(image_path)
+    get_input(image_path)
+
     add_and_load_image(image_path, parent="Primary Window")
 
 # Lambdas

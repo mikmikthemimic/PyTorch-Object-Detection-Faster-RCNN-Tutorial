@@ -1,13 +1,16 @@
 import dearpygui.dearpygui as dpg
 
-import model
+from model import get_input
 
 dpg.create_context()
 
 # Callbacks
 def select_image(sender, app_data, user_data):
     selections = app_data.get("selections")
-    image_path = next(iter(selections.values()))
+    image = next(iter(selections.values()))
+    #print(f"App Data: {app_data}")
+    image_path = app_data.get("current_path")
+    image_name = next(iter(selections.keys()))
 
     if dpg.does_item_exist("image_tag"):
         print("Deleting existing image")
@@ -15,9 +18,9 @@ def select_image(sender, app_data, user_data):
         dpg.delete_item("texture_tag")
 
     print(image_path)
-    get_input(image_path)
+    get_input(image_path, image_name)
 
-    add_and_load_image(image_path, parent="Primary Window")
+    add_and_load_image(image, parent="Primary Window")
 
 # Lambdas
 def add_and_load_image(image_path, parent=None):

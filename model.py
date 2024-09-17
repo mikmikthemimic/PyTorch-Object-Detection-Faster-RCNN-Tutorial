@@ -1,64 +1,71 @@
-# import ast
-# import os
-# import pathlib
-# 
-# import neptune
-# import numpy as np
-# import torch
-# from torch.utils.data import DataLoader
-# from torchvision.models.detection.transform import GeneralizedRCNNTransform
-# 
-# from pytorch_faster_rcnn_tutorial.backbone_resnet import ResNetBackbones
-# from pytorch_faster_rcnn_tutorial.datasets import (
-#     ObjectDetectionDataSet,
-#     ObjectDetectionDatasetSingle,
-# )
-# from pytorch_faster_rcnn_tutorial.faster_RCNN import get_faster_rcnn_resnet
-# from pytorch_faster_rcnn_tutorial.transformations import (
-#     ComposeDouble,
-#     ComposeSingle,
-#     FunctionWrapperDouble,
-#     FunctionWrapperSingle,
-#     apply_nms,
-#     apply_score_threshold,
-#     normalize_01,
-# )
+import ast
+import os
+import pathlib
+
+import neptune
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+from torchvision.models.detection.transform import GeneralizedRCNNTransform
+
+from pytorch_faster_rcnn_tutorial.backbone_resnet import ResNetBackbones
+from pytorch_faster_rcnn_tutorial.datasets import (
+    ObjectDetectionDataSet,
+    ObjectDetectionDatasetSingle,
+)
+from pytorch_faster_rcnn_tutorial.faster_RCNN import get_faster_rcnn_resnet
+from pytorch_faster_rcnn_tutorial.transformations import (
+    ComposeDouble,
+    ComposeSingle,
+    FunctionWrapperDouble,
+    FunctionWrapperSingle,
+    apply_nms,
+    apply_score_threshold,
+    normalize_01,
+)
 from pytorch_faster_rcnn_tutorial.utils import (
     collate_single,
     get_filenames_of_path,
     save_json,
 )
 
-# params = {
-#     "EXPERIMENT": "GMT3-488",
-#     "OWNER": "mikmikthemimic",
-#     #"INPUT_DIR": "pytorch_faster_rcnn_tutorial/data/heads/test",
-#     "PREDICTIONS_PATH": "predictions",
-#     "MODEL_DIR": "/content/PyTorch-Object-Detection-Faster-RCNN-Tutorial/pytorch_faster_rcnn_tutorial/model/kfolds/fold_4.ckpt",
-#     "DOWNLOAD": False,
-#     "DOWNLOAD_PATH": "pytorch_faster_rcnn_tutorial/model/kfolds",
-#     "PROJECT": "GM-Thesis3",
-# 
-#     "ENSEMBLE": False,
-# }
-# 
-# # color mapping
-# color_mapping = {
-#     1: "blue",
-#     2: "green",
-#     3: "white",
-#     4: "yellow",
-#     5: "red"
-# }
+params = {
+    "EXPERIMENT": "GMT3-488",
+    "OWNER": "mikmikthemimic",
+    #"INPUT_DIR": "pytorch_faster_rcnn_tutorial/data/heads/test",
+    "PREDICTIONS_PATH": "predictions",
+    "MODEL_DIR": "/content/PyTorch-Object-Detection-Faster-RCNN-Tutorial/pytorch_faster_rcnn_tutorial/model/kfolds/fold_4.ckpt",
+    "DOWNLOAD": False,
+    "DOWNLOAD_PATH": "pytorch_faster_rcnn_tutorial/model/kfolds",
+    "PROJECT": "GM-Thesis3",
 
-class Model():
+    "ENSEMBLE": False,
+}
+
+# color mapping
+color_mapping = {
+    1: "blue",
+    2: "green",
+    3: "white",
+    4: "yellow",
+    5: "red"
+}
+
+# TODO: make it so that the get_input will only return that ONE selected image
+def get_input(image_path : str = "", image_name : str = ""):
+    inputs = []
+    for images in os.listdir(image_path):
+        # check if the image ends with png or jpg or jpeg
+        if (images.endswith(".png") or images.endswith(".jpg")\
+            or images.endswith(".jpeg")):
+            if image_name == images:
+                inputs.append(images)
+                inputs.sort()
+                print(f"Found {len(inputs)} files in {image_path}")
+                return inputs
+# class Model():
     # THIS IS FOR VIDEO INPUT BUT WE ARE DOING IMAGE INPUT NALANG
-    def get_input(image_path : str = ""):
-        inputs = get_filenames_of_path(pathlib.Path(image_path))
-        inputs.sort()
-        print(f"Found {len(inputs)} files in {image_path}")
 
-        return inputs
 
     # # transformations
     # transforms = ComposeSingle(

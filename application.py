@@ -8,7 +8,8 @@ dpg.create_context()
 def select_image(sender, app_data, user_data):
     selections = app_data.get("selections")
     image = next(iter(selections.values()))
-    #print(f"App Data: {app_data}")
+    print(f"App Data: {app_data}")
+    print(f"Image: {image}")
     image_path = app_data.get("current_path")
     image_name = next(iter(selections.keys()))
 
@@ -18,6 +19,8 @@ def select_image(sender, app_data, user_data):
         dpg.delete_item("texture_tag")
 
     print(image_path)
+    
+    #TODO: FIGURE OUT KUNG ANO ICACALL HERE BC IT CANNOT BE GET_INPUT, GET_INPUT WILL BE CALLED BY ANOTHER METHOD SA MODEL.PY; IPASS NALANG DAW YUNG IMAGE TO GET_INPUT
     get_input(image_path, image_name)
 
     add_and_load_image(image, parent="Primary Window")

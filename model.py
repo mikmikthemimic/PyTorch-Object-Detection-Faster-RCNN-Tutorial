@@ -51,7 +51,6 @@ color_mapping = {
     5: "red"
 }
 
-# TODO: make it so that the get_input will only return that ONE selected image
 def get_input(image_path : str = "", image_name : str = ""):
     inputs = []
     for images in os.listdir(image_path):

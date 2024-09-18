@@ -4,6 +4,11 @@ from model import get_input
 
 dpg.create_context()
 
+def get_predictions(json_file_name, image_name):
+    # get image with predictions
+    add_and_load_image(final_image, parent="Primary Window")
+
+
 # Callbacks
 def select_image(sender, app_data, user_data):
     selections = app_data.get("selections")
@@ -22,8 +27,6 @@ def select_image(sender, app_data, user_data):
     predict(image_name)
 
     # What happens here: di siya dito bc we're gonna display yung with predictions na; get the predictions file, do the show image with predictions then display that image using command below; eg. cv2.imwrite sa make_video.py
-    add_and_load_image(image, parent="Primary Window")
-
 # Lambdas
 def add_and_load_image(image_path, parent=None):
     width, height, channels, data = dpg.load_image(image_path)

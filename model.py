@@ -51,43 +51,32 @@ color_mapping = {
     5: "red"
 }
 
-def get_input(image_path : str = "", image_name : str = ""):
-    inputs = []
-    for images in os.listdir(image_path):
-        # check if the image ends with png or jpg or jpeg
-        if (images.endswith(".png") or images.endswith(".jpg")\
-            or images.endswith(".jpeg")):
-            if image_name == images:
-                inputs.append(images)
-                inputs.sort()
-                print(f"Found {len(inputs)} files in {image_path}")
-                return inputs
 # class Model():
     # THIS IS FOR VIDEO INPUT BUT WE ARE DOING IMAGE INPUT NALANG
 
+def get_dataset(input):
+    # transformations
+    transforms = ComposeSingle(
+        [
+            FunctionWrapperSingle(np.moveaxis, source=-1, destination=0),
+            FunctionWrapperSingle(normalize_01),
+        ]
+    )
 
-    # # transformations
-    # transforms = ComposeSingle(
-    #     [
-    #         FunctionWrapperSingle(np.moveaxis, source=-1, destination=0),
-    #         FunctionWrapperSingle(normalize_01),
-    #     ]
-    # )
-# 
-    # dataset = ObjectDetectionDatasetSingle(
-    #     inputs=inputs,
-    #     transform=transforms,
-    #     use_cache=False,
-    # )
-# 
-    # # create dataloader
-    # dataloader_prediction = DataLoader(
-    #     dataset=dataset,
-    #     batch_size=1,
-    #     shuffle=False,
-    #     num_workers=0,
-    #     collate_fn=collate_single,
-    # )
+    dataset = ObjectDetectionDatasetSingle(
+        inputs=input,
+        transform=transforms,
+        use_cache=False,
+    )
+
+    # create dataloader
+    dataloader_prediction = DataLoader(
+        dataset=dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        collate_fn=collate_single,
+    )
     # 
     # # import experiment from neptune
     # project_name = f'{params["OWNER"]}/{params["PROJECT"]}'

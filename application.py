@@ -10,19 +10,18 @@ def select_image(sender, app_data, user_data):
     image = next(iter(selections.values()))
     print(f"App Data: {app_data}")
     print(f"Image: {image}")
-    image_path = app_data.get("current_path")
+
     image_name = next(iter(selections.keys()))
 
     if dpg.does_item_exist("image_tag"):
         print("Deleting existing image")
         dpg.delete_item("image_tag")
         dpg.delete_item("texture_tag")
-
-    print(image_path)
     
     #TODO: FIGURE OUT KUNG ANO ICACALL HERE BC IT CANNOT BE GET_INPUT, GET_INPUT WILL BE CALLED BY ANOTHER METHOD SA MODEL.PY; IPASS NALANG DAW YUNG IMAGE TO GET_INPUT
-    get_input(image_path, image_name)
+    get_dataset(image_name)
 
+    # What happens here: di siya dito bc we're gonna display yung with predictions na; get the predictions file, do the show image with predictions then display that image using command below
     add_and_load_image(image, parent="Primary Window")
 
 # Lambdas

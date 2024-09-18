@@ -80,6 +80,15 @@ def get_input(image_path : str = "", image_name : str = ""):
     #     use_cache=False,
     # )
 # 
+    # # create dataloader
+    # dataloader_prediction = DataLoader(
+    #     dataset=dataset,
+    #     batch_size=1,
+    #     shuffle=False,
+    #     num_workers=0,
+    #     collate_fn=collate_single,
+    # )
+    # 
     # # import experiment from neptune
     # project_name = f'{params["OWNER"]}/{params["PROJECT"]}'
     # print(f"Project: {project_name}")
@@ -103,7 +112,7 @@ def get_input(image_path : str = "", image_name : str = ""):
 # 
     # # download model from neptune or load from checkpoint
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# 
+    # 
     # if params["DOWNLOAD"]:
     #     download_path = pathlib.Path(os.getcwd()) / params["DOWNLOAD_PATH"]
     #     download_path.mkdir(parents=True, exist_ok=True)
@@ -114,7 +123,7 @@ def get_input(image_path : str = "", image_name : str = ""):
     #             project['artifacts/ensemble_model'].download(
     #                 destination=download_path.as_posix()
     #             )  # download model
-# 
+    # 
     #         model_state_dict = torch.load(
     #             download_path / model_name, map_location=device
     #         )
@@ -123,10 +132,10 @@ def get_input(image_path : str = "", image_name : str = ""):
     #         model_name = "fold_4.ckpt"  # that's how I called the best model                      best-model.pt
     #         # model_name = properties['checkpoint_name']  # logged when called log_model_neptune()
     #         if not (download_path / model_name).is_file():
-    #             project['artifacts/fold_4.ckpt'].download(
+    #             project['artifacts/folds/fold_4'].download(
     #                 destination=download_path.as_posix()
     #             )  # download model
-# 
+    # 
     #         model_state_dict = torch.load(
     #             download_path / model_name, map_location=device
     #         )
@@ -147,6 +156,9 @@ def get_input(image_path : str = "", image_name : str = ""):
     # if 'state_dict' in checkpoint.keys():
     #     checkpoint = checkpoint['state_dict']
 # 
+    # # Check if keys start with model. and remove it
+    # model_state_dict = {k.replace("model.", ""): v for k, v in checkpoint.items() if k.startswith("model.")}
+    # print(model_state_dict.keys())
     # model.load_state_dict(model_state_dict)
 # 
     # # inference (cpu)

@@ -1,6 +1,10 @@
 from shapely.geometry import Polygon
 import cv2
 import numpy as np
+import os
+import torch
+import json
+from glob import glob
 
 def check_overlap(coords, label, img):
     """
@@ -49,3 +53,21 @@ def get_light(image):
     elif avg_color[0] < avg_color[2]:
         return 'Green light'
     return 'Unknown light'
+
+def test():
+    prediction_path = glob('pytorch_faster_rcnn_tutorial/data/heads/predictions/*.json')
+    input_path = glob('pytorch_faster_rcnn_tutorial/data/heads/test/*.jpg')
+
+    for file in files:
+        for j in range(len(prediction_path)):
+            with open(file,'r') as f:
+                data = json.load(f)
+                for i in range(len(data['labels'])):
+                    data['labels'][i] = check_overlap(data['boxes'][i], data['labels'][i], input_path[j])
+
+            with open(file, 'w') as f:
+                json.dump(data, f, indent=4)
+
+if __name__ == "__main__":
+    test()
+

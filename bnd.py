@@ -15,7 +15,9 @@ def check_overlap(coords, label, img):
     # Taken from CVAT.ai annotation tool
     roi_pedlane = [(46.80, 366.90), (17.30, 463.30), (199.67, 443.63), (342.79, 426.02), (720.40, 383.08), (1228.00, 333.00), (1194.90, 326.94), (1155.27, 320.33), (1092.51, 306.02), (1052.88, 296.11), (1031.96, 289.50), (680.70, 313.70), (687.38, 321.43), (692.88, 329.14), (692.90, 338.70), (681.50, 345.20), (664.80, 346.80), (647.70, 346.70), (625.90, 344.50), (607.30, 340.90), (590.20, 333.60), (570.30, 320.70), (326.27, 342.35)]
     roi_pedlane = Polygon(roi_pedlane)
-    object_polygon = Polygon(coords)
+    X1, Y1, X2, Y2 = coords
+    new_coords = [(X1, Y1), (X2, Y1), (X2, Y2), (X1, Y2)]
+    object_polygon = Polygon(new_coords)
 
     ped_status = get_light(img)
 
@@ -34,6 +36,12 @@ def check_overlap(coords, label, img):
                 return 'Vehicle-Violator'
         else:
             return 'Vehicle'
+    elif label == 'Bicycle' or label == 'Bicycle-Violator':
+        if ped_status == 'Green light':
+            if roi_pedlane.intersection(object_polygon).area > 0.2 * object_polygon.area:
+                return 'Bicycle-Violator'
+        else:
+            return 'Bicycle'
 
 def get_light(image):
     """
@@ -58,12 +66,13 @@ def test():
     prediction_path = glob('pytorch_faster_rcnn_tutorial/data/heads/predictions/*.json')
     input_path = glob('pytorch_faster_rcnn_tutorial/data/heads/test/*.jpg')
 
-    for file in files:
+    for file in prediction_path:
         for j in range(len(prediction_path)):
             with open(file,'r') as f:
                 data = json.load(f)
                 for i in range(len(data['labels'])):
                     data['labels'][i] = check_overlap(data['boxes'][i], data['labels'][i], input_path[j])
+                    print(data['boxes'][i])
 
             with open(file, 'w') as f:
                 json.dump(data, f, indent=4)

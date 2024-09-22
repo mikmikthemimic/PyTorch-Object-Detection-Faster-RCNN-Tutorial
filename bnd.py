@@ -16,6 +16,7 @@ def check_overlap(coords, label, ped_status):
     #print(f'roi_pedlane: {roi_pedlane}')
     #print(f'coords: {coords}')
     x1, y1, x2, y2 = coords
+    y1 = y1 - (y1 - y2) // 2
     object_polygon = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
     #print(object_polygon)
     

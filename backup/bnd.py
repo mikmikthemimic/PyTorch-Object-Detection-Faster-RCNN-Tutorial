@@ -23,58 +23,43 @@ def check_overlap(coords, label, ped_status):
     object_polygon = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
     #print(object_polygon)
     
-    if not(roi_street.intersection(object_polygon).area > 0.2 * object_polygon.area):
-        return "Outside"
+    if label == 'Enforcer':
+        return 'Enforcer'
     
-    if roi_pedlane.intersection(object_polygon).area > 0.2 * object_polygon.area:
-        if label == 'Pedestrian' or label == 'Pedestrian-Violator':
-            # Pedestrian is inside pedestrian lane ROI and light is red
-            if ped_status == 'Red light':
+    elif label == 'Pedestrian' or label == 'Pedestrian-Violator':
+        if ped_status == 'Red light':
+            if roi_pedlane.intersection(object_polygon).area > 0.2 * object_polygon.area:
+                if label == 'Pedestrian':
+                    print('Converted to Pedestrian-Violator')
                 return 'Pedestrian-Violator'
-            # Pedestrian is inside pedestrian lane ROI and light is green
             else:
+                if ped_status == 'Green light':
+                    return 'Pedestrian-Violator'
                 return 'Pedestrian'
-            
-        elif label == 'Vehicle' or label == 'Vehicle-Violator':
-            # Vehicle is inside pedestrian lane ROI and light is green
-            if ped_status == 'Green light':
-                return 'Vehicle-Violator'
-            # Vehicle is inside pedestrian lane ROI and light is red
-            else:
-                return 'Vehicle'
-            
-        elif label == 'Bicycle' or label == 'Bicycle-Violator':
-            # Bicycle is inside pedestrian lane ROI and light is green
-            if ped_status == 'Green light':
-                return 'Bicycle-Violator'
-            # Bicycle is inside pedestrian lane ROI and light is red
-            else:
-                return 'Bicycle'
-    # Kapag wala sa pedestrian lane
-    else:
-        if label == 'Pedestrian' or label == 'Pedestrian-Violator':
-            # Pedestrian is outside pedestrian lane ROI and light is red
-            if ped_status == 'Red light':
-                return 'Pedestrian'
-            # Pedestrian is outside pedestrian lane ROI and light is green
-            else:
-                return 'Pedestrian-Violator'
+        else:
+            return 'Pedestrian'
         
-        elif label == 'Vehicle' or label == 'Vehicle-Violator':
-            # Vehicle is outside pedestrian lane ROI and light is green
-            if ped_status == 'Green light':
+    elif label == 'Vehicle' or label == 'Vehicle-Violator':
+        if ped_status == 'Green light':
+            if roi_pedlane.intersection(object_polygon).area > 0.2 * object_polygon.area:
+                if label == 'Vehicle':
+                    print('Converted to Vehicle-Violator')
+                return 'Vehicle-Violator'
+            else:
                 return 'Vehicle'
-            # Vehicle is outside pedestrian lane ROI and light is red
+        else:
+            return 'Vehicle'
+        
+    elif label == 'Bicycle' or label == 'Bicycle-Violator':
+        if ped_status == 'Green light':
+            if roi_pedlane.intersection(object_polygon).area > 0.2 * object_polygon.area:
+                if label == 'Bicycle':
+                    print('Converted to Bicycle-Violator')
+                return 'Bicycle-Violator'
             else:
-                return label # Return lang kung ano yung original
-            
-        elif label == 'Bicycle' or label == 'Bicycle-Violator':
-            # Bicycle is outside pedestrian lane ROI and light is green
-            if ped_status == 'Green light':
                 return 'Bicycle'
-            # Bicycle is outside pedestrian lane ROI and light is red
-            else:
-                return label
+        else:
+            return 'Bicycle'
 
 def get_light(image):
     """

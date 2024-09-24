@@ -19,7 +19,8 @@ labels = {
     4: 'Vehicle-Violator',
     5: 'Pedestrian-Violator',
     6: 'Bicycle-Violator',
-    99: 'Unknown'
+    7: 'Outside',
+    99: 'Unknown',
 }
 
 reverse_labels = {
@@ -28,7 +29,9 @@ reverse_labels = {
     'Bicycle': 3,
     'Vehicle-Violator': 4,
     'Pedestrian-Violator': 5,
-    'Bicycle-Violator': 6
+    'Bicycle-Violator': 6,
+    'Outside' : 7,
+    'Unknown' : 99
 }
 
 # best setting
@@ -51,7 +54,15 @@ for i in range(len(predictions)):
         image = cv2.imread(images[i])
 
         # Comment this if you have numbers for labels
-        data['labels'] = [reverse_labels[label] for label in data['labels']]
+        
+        for i,label in enumerate(data['labels']):
+            try:
+                data['labels'][i] = reverse_labels[label]
+            except:
+                print(f"file: {f}, label: {label}, iteration: {i}")
+            #data['labels'] = [reverse_labels[label] for label in data['labels']]
+        
+
 
         nms_boxes = torch.tensor(data['boxes'])
         if nms_boxes.size()[0] > 0 and USE_NMS:
@@ -97,6 +108,9 @@ for i in range(len(predictions)):
                 case 'Bicycle-Violator':
                     bnd_color = (0, 0, 139)
                     text_color = (0, 0, 255)
+                case 'Outside':
+                    bnd_color = (0, 0, 0)
+                    text_color = (36, 255, 12)
                 case _:
                     bnd_color = (255, 0, 0)
                     text_color = (36, 255, 12)

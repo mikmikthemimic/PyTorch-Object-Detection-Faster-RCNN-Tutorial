@@ -36,7 +36,7 @@ reverse_labels = {
 
 # best setting
 IOU_THRESHOLD = 0.50
-SCORE_THRESHOLD = 0
+SCORE_THRESHOLD = 0.50
 
 USE_NMS = False
 
@@ -55,18 +55,18 @@ for i in range(len(predictions)):
 
         # Comment this if you have numbers for labels
         
-        #for i,label in enumerate(data['labels']):
-        #    try:
-        #        data['labels'][i] = reverse_labels[label]
-        #    except:
-        #        print(f"file: {f}, label: {label}, iteration: {i}")
-        #data['labels'] = [reverse_labels[label] for label in data['labels']]
+        for i,label in enumerate(data['labels']):
+            try:
+                data['labels'][i] = reverse_labels[label]
+            except:
+                print(f"file: {f}, label: {label}, iteration: {i}")
+            #data['labels'] = [reverse_labels[label] for label in data['labels']]
         
 
 
         nms_boxes = torch.tensor(data['boxes'])
         if nms_boxes.size()[0] > 0 and USE_NMS:
-            nms_labels = torch.tensor(data[labels])
+            nms_labels = torch.tensor(data['labels'])
             nms_scores = torch.tensor(data['scores'])
 
             mask = nms(nms_boxes, nms_scores, iou_threshold=IOU_THRESHOLD)
@@ -77,21 +77,7 @@ for i in range(len(predictions)):
             data['scores'] = np.asarray(nms_scores)[mask]
 
         for j in range(len(data['labels'])):
-            #label = data['labels'][j]
             confidence = data['scores'][j]
-
-            if (data['labels'][j] == 'Vehicle' or data['labels'][j] == 'Vehicle-Violator'):
-                SCORE_THRESHOLD = 0.5
-
-            elif (data['labels'][j] == 'Pedestrian' or data['labels'][j] == 'Pedestrian-Violator'):
-                SCORE_THRESHOLD = 0.2
-
-            elif (data['labels'][j] == 'Bicycle' or data['labels'][j] == 'Bicycle-Violator'):
-                SCORE_THRESHOLD = 0.2
-                
-            else:
-                print(f"Label: {data['labels'][j]}, iteration: {j}")
-
             if confidence < SCORE_THRESHOLD:
                 continue
 
@@ -99,11 +85,11 @@ for i in range(len(predictions)):
             box = [math.trunc(float(i)) for i in data['boxes'][j]]
 
             # Comment this if you have names for labels
-            #if label not in labels:
-            #    print(f'Found unknown label: {label} from {predictions[i]}')
-            #    label = 99
+            # if label not in labels:
+            #     print(f'Found unknown label: {label} from {predictions[i]}')
+            #     label = 99
 
-            match label:
+            match labels[label]:
                 case 'Vehicle':
                     bnd_color = (0, 255, 0)
                     text_color = (1, 250, 32)
@@ -130,7 +116,7 @@ for i in range(len(predictions)):
                     text_color = (36, 255, 12)
             
             image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), bnd_color, 1)
-            cv2.putText(image, label, (box[0], box[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
+            cv2.putText(image, labels[label], (box[0], box[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             cv2.putText(image, f'{confidence:.2f}', (box[0], box[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             cv2.putText(image, filename, (1150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             cv2.putText(image, ("NMS" if USE_NMS else "No NMS"), (1150, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, ((0, 255, 0) if USE_NMS else (0, 0, 255)), 2)

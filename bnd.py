@@ -23,10 +23,10 @@ def check_overlap(coords, label, ped_status):
     object_polygon = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
     #print(object_polygon)
     
-    if not(roi_street.intersection(object_polygon).area > 0.2 * object_polygon.area):
+    if not(roi_street.intersection(object_polygon).area > 0.1 * object_polygon.area):
         return "Outside"
     
-    if roi_pedlane.intersection(object_polygon).area > 0.2 * object_polygon.area:
+    if roi_pedlane.intersection(object_polygon).area > 0.1 * object_polygon.area:
         if label == 'Pedestrian' or label == 'Pedestrian-Violator':
             # Pedestrian is inside pedestrian lane ROI and light is red
             if ped_status == 'Red light':

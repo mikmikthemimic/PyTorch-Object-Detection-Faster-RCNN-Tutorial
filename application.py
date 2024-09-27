@@ -6,6 +6,7 @@ dpg.create_context()
 
 def get_predictions(json_file_name, image_name):
     # get predictions json file from predict()
+    #TODO: call bnd.py here
     # get image with predictions
     add_and_load_image(final_image, parent="Primary Window")
 
@@ -24,7 +25,7 @@ def select_image(sender, app_data, user_data):
         dpg.delete_item("image_tag")
         dpg.delete_item("texture_tag")
     
-    #TODO: FIGURE OUT KUNG ANO ICACALL HERE BC IT CANNOT BE GET_INPUT, GET_INPUT WILL BE CALLED BY ANOTHER METHOD SA MODEL.PY; IPASS NALANG DAW YUNG IMAGE TO GET_INPUT
+    #TODO:
     predict(image_name)
 
 # Lambdas

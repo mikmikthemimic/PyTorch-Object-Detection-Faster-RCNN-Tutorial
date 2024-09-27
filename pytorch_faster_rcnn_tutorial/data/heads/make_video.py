@@ -19,7 +19,6 @@ labels = {
     4: 'Vehicle-Violator',
     5: 'Pedestrian-Violator',
     6: 'Bicycle-Violator',
-    7: 'Outside',
     99: 'Unknown',
 }
 
@@ -30,7 +29,6 @@ reverse_labels = {
     'Vehicle-Violator': 4,
     'Pedestrian-Violator': 5,
     'Bicycle-Violator': 6,
-    'Outside' : 7,
     'Unknown' : 99
 }
 

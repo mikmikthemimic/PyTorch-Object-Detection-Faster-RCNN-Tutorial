@@ -16,15 +16,16 @@ def check_overlap(coords, label, ped_status):
 
     roi_street = [(106.54,162.43), (1.54,506.21), (0.0,603.48), (0.0,719.59), (1278.44,719.59), (1278.44,321.61), (1207.31,328.39), (1163.28,321.61), (678.94,194.6), (560.4,153.96)]
     roi_street = Polygon(roi_street)
-
+    #print(f'roi_pedlane: {roi_pedlane}')
+    #print(f'coords: {coords}')
     x1, y1, x2, y2 = coords
     # y2 = y1+((y2-y1)//2)
     y1 = y1 - (y1 - y2) // 2
     object_polygon = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
     #print(object_polygon)
     
-    if not(roi_street.intersection(object_polygon).area > 0.1 * object_polygon.area):
-        return "Outside"
+    #if roi_street.intersection(object_polygon).area > 0.2 * object_polygon.area:
+    #    return "Outside"
     
     if roi_pedlane.intersection(object_polygon).area > 0.1 * object_polygon.area:
         if label == 'Pedestrian' or label == 'Pedestrian-Violator':
@@ -53,12 +54,14 @@ def check_overlap(coords, label, ped_status):
     # Kapag wala sa pedestrian lane
     else:
         if label == 'Pedestrian' or label == 'Pedestrian-Violator':
-            # Pedestrian is outside pedestrian lane ROI and light is red
-            if ped_status == 'Red light':
-                return 'Pedestrian'
-            # Pedestrian is outside pedestrian lane ROI and light is green
-            else:
+            if roi_street.intersection(object_polygon).area > 0.2 * object_polygon.area:
+                # Pedestrian is outside the pedestrian lane, but inside the street
+                # They shouldn't be there whether the light is red or green
                 return 'Pedestrian-Violator'
+            else:
+                # Pedestrian is outside the street,
+                # they're not violating any rules whether the light is red or green
+                return 'Pedestrian'
         
         elif label == 'Vehicle' or label == 'Vehicle-Violator':
             # Vehicle is outside pedestrian lane ROI and light is green
@@ -75,6 +78,8 @@ def check_overlap(coords, label, ped_status):
             # Bicycle is outside pedestrian lane ROI and light is red
             else:
                 return label
+            
+
 
 def get_light(image):
     """

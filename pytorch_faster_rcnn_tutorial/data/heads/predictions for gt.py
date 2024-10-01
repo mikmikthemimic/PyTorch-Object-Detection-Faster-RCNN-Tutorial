@@ -5,7 +5,7 @@ import math
 from torchvision.ops import nms
 from glob import glob
 
-files = glob('predictions/*.json')
+files = glob('predictions/New folder/predictions/*.json')
 
 labels = {
     1: 'Vehicle',

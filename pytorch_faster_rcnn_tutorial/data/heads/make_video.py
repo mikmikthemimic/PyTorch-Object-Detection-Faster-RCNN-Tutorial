@@ -9,7 +9,7 @@ import math
 from torchvision.ops import nms
 from glob import glob
 
-predictions = glob('predictions/*.json')
+predictions = glob('predictions/GMT3-488/predictions/*.json')
 images = glob('test/*.jpg')
 
 labels = {
@@ -36,7 +36,7 @@ reverse_labels = {
 IOU_THRESHOLD = 0.50
 SCORE_THRESHOLD = 0
 
-USE_NMS = False
+USE_NMS = True
 
 video = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'), 10, (1280, 720))
 

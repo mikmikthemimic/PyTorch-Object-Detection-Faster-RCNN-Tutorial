@@ -101,7 +101,7 @@ def get_light(image):
     return 'Unknown light'
 
 def test():
-    prediction_path = glob('pytorch_faster_rcnn_tutorial/data/heads/predictions/*.json')
+    prediction_path = glob('pytorch_faster_rcnn_tutorial/data/heads/predictions/New folder/predictions/*.json')
     input_path = glob('pytorch_faster_rcnn_tutorial/data/heads/test/*.jpg')
 
     for i in range(len(prediction_path)):

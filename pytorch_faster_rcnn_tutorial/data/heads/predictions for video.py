@@ -5,13 +5,25 @@ import math
 from torchvision.ops import nms
 from glob import glob
 
-files = glob('predictions/*.json')
+files = glob('predictions/GMT3-488/predictions/*.json')
 
 labels = {
-    'Vehicle':1,
-    'Pedestrian':2,
-    'Bicycle':3,
-    'Unknown':99,
+    1: 'Vehicle',
+    2: 'Pedestrian',
+    3: 'Bicycle',
+    4: 'Vehicle-Violator',
+    5: 'Pedestrian-Violator',
+    6: 'Bicycle-Violator',
+    99: 'Unknown',
+}
+reverse_labels = {
+    'Vehicle': 1,
+    'Pedestrian': 2,
+    'Bicycle': 3,
+    'Vehicle-Violator': 4,
+    'Pedestrian-Violator': 5,
+    'Bicycle-Violator': 6,
+    'Unknown' : 99
 }
 
 for file in files:

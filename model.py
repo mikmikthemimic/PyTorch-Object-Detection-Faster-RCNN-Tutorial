@@ -29,6 +29,11 @@ from pytorch_faster_rcnn_tutorial.utils import (
     save_json,
 )
 
+from bnd import (
+    check_overlap,
+    get_light,
+)
+
 params = {
     "EXPERIMENT": "GMT3-488",
     "OWNER": "mikmikthemimic",
@@ -165,4 +170,12 @@ def predict(input):
             pred_list = {
                 key: value.tolist() for key, value in pred.items()
             }  # numpy arrays are not serializable -> .tolist()
+            light_status = get_light(sample)
+
+            for p in range(len(pred_list)):
+                result = check_overlap(pred_list['boxes'][p], pred_list['labels'][p], light_status)
+                pred_list['labels'][p] = result
+
             save_json(pred_list, path=save_dir / name.with_suffix(".json"))
+
+            

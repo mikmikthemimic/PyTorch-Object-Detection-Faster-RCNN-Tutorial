@@ -39,9 +39,9 @@ params = {
     "OWNER": "mikmikthemimic",
     #"INPUT_DIR": "pytorch_faster_rcnn_tutorial/data/heads/test",
     "PREDICTIONS_PATH": "predictions",
-    "MODEL_DIR": "/content/PyTorch-Object-Detection-Faster-RCNN-Tutorial/pytorch_faster_rcnn_tutorial/model/kfolds/fold_4.ckpt",
+    "MODEL_DIR": "pytorch_faster_rcnn_tutorial/model/model_statedict_GMT3-488_2024_08_06.pt",
     "DOWNLOAD": False,
-    "DOWNLOAD_PATH": "pytorch_faster_rcnn_tutorial/model/kfolds",
+    "DOWNLOAD_PATH": "pytorch_faster_rcnn_tutorial/model",
     "PROJECT": "GM-Thesis3",
 
     "ENSEMBLE": False,
@@ -56,10 +56,7 @@ color_mapping = {
     5: "red"
 }
 
-# class Model():
-    # THIS IS FOR VIDEO INPUT BUT WE ARE DOING IMAGE INPUT NALANG
-
-def predict(input):
+def predict(input_path):
     # transformations
     transforms = ComposeSingle(
         [
@@ -67,9 +64,8 @@ def predict(input):
             FunctionWrapperSingle(normalize_01),
         ]
     )
-
     dataset = ObjectDetectionDatasetSingle(
-        inputs=input,
+        inputs=[pathlib.Path(input_path)],
         transform=transforms,
         use_cache=False,
     )
@@ -123,7 +119,7 @@ def predict(input):
             )
         else:
             #new change   08/06/2024      updated to load checkpoint
-            model_name = "fold_4.ckpt"  # that's how I called the best model                      best-model.pt
+            model_name = "model_statedict_GMT3-488_2024_08_06.pt"  # that's how I called the best model                      best-model.pt
             # model_name = properties['checkpoint_name']  # logged when called log_model_neptune()
             if not (download_path / model_name).is_file():
                 project['artifacts/folds/fold_4'].download(
@@ -135,7 +131,7 @@ def predict(input):
             )
     else:
         checkpoint = torch.load(params["MODEL_DIR"], map_location=device)
-        print(checkpoint.keys())
+        #print(checkpoint.keys())
 # 
     model = get_faster_rcnn_resnet(
     num_classes=int(parameters["CLASSES"]),
@@ -146,14 +142,16 @@ def predict(input):
     min_size=int(parameters["MIN_SIZE"]),
     max_size=int(parameters["MAX_SIZE"]),
     )
+
+    #print(model)
      
     if 'state_dict' in checkpoint.keys():
         checkpoint = checkpoint['state_dict']
 # 
     # Check if keys start with model. and remove it
-    model_state_dict = {k.replace("model.", ""): v for k, v in checkpoint.items() if k.startswith("model.")}
-    print(model_state_dict.keys())
-    model.load_state_dict(model_state_dict)
+    #model_state_dict = {k.replace("model.", ""): v for k, v in checkpoint.items() if k.startswith("model.")}
+    #print(model_state_dict.keys())
+    model.load_state_dict(checkpoint)
 # 
     # inference (cpu)
     model.eval()
@@ -170,12 +168,15 @@ def predict(input):
             pred_list = {
                 key: value.tolist() for key, value in pred.items()
             }  # numpy arrays are not serializable -> .tolist()
-            light_status = get_light(sample)
+            #print(sample)
+            light_status = get_light(input_path)
 
-            for p in range(len(pred_list)):
-                result = check_overlap(pred_list['boxes'][p], pred_list['labels'][p], light_status)
-                pred_list['labels'][p] = result
+            for p in range(len(pred_list['labels'])):
+                pred_list['labels'][p] = check_overlap(pred_list['boxes'][p], pred_list['labels'][p], light_status)
 
-            save_json(pred_list, path=save_dir / name.with_suffix(".json"))
+            filename = name.with_suffix(".json")
+            save_json(pred_list, path=save_dir / filename)
 
+        output = (save_dir/filename)
+        return output
             

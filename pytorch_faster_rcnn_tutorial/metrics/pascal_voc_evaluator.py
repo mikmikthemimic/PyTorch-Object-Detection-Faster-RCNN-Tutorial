@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from metrics.bounding_box import BoundingBox
-from metrics.enumerators import MethodAveragePrecision
+from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
+from pytorch_faster_rcnn_tutorial.metrics.enumerators import MethodAveragePrecision
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -141,6 +141,7 @@ def get_pascalvoc_metrics(
         ]
         tp = np.zeros(len(dects))
         fp = np.zeros(len(dects))
+        fn = np.zeros(len(dects))
         # create dictionary with amount of expected detections for each image
         detected_gt_per_image = Counter([bb.get_image_name() for bb in gt_boxes])
         for key, val in detected_gt_per_image.items():
@@ -151,6 +152,7 @@ def get_pascalvoc_metrics(
             "confidence": [],
             "tp": [],
             "fp": [],
+            "fn": [],
             "acc tp": [],
             "acc fp": [],
             "precision": [],
@@ -159,19 +161,6 @@ def get_pascalvoc_metrics(
         # Loop through detections
         for idx_det, det in enumerate(dects):
             img_det = det.get_image_name()
-            
-            # img_det = literal name ng image lol
-
-            #confidence = det.get_confidence()
-
-            ## DOESN'T WORK
-            ## Insert confidence condition here
-            #if img_det == 'Vehicle' and confidence < 0.5:
-            #    continue
-            #elif img_det == 'Pedestrian' and confidence < 0.2:
-            #    continue
-            #elif img_det == 'Bicycle' and confidence < 0.2:
-            #    continue
 
             if generate_table:
                 dict_table["image"].append(img_det)
@@ -191,7 +180,7 @@ def get_pascalvoc_metrics(
                     id_match_gt = j
             # Assign detection as tp or fp
             if iou_max >= iou_threshold:
-                # gt was not matched with any detection
+                # gt was not matched with any detection // only one detection per
                 if detected_gt_per_image[img_det][id_match_gt] == 0:
                     tp[idx_det] = 1  # detection is set as true positive
                     detected_gt_per_image[img_det][
@@ -201,18 +190,36 @@ def get_pascalvoc_metrics(
                     if generate_table:
                         dict_table["tp"].append(1)
                         dict_table["fp"].append(0)
+                        dict_table["fn"].append(0)
                 else:
                     fp[idx_det] = 1  # detection is set as false positive
                     if generate_table:
                         dict_table["fp"].append(1)
                         dict_table["tp"].append(0)
+                        dict_table["fn"].append(0)
                     # print("fp")
             # - A detected "cat" is overlaped with a GT "cat" with IOU >= iou_threshold.
-            else:
+            elif iou_max < iou_threshold and iou_max > 0:
                 fp[idx_det] = 1  # detection is set as false positive
                 if generate_table:
                     dict_table["fp"].append(1)
                     dict_table["tp"].append(0)
+                    dict_table["fn"].append(0)
+            else:
+                fn[idx_det] = 1
+                if generate_table:
+                    dict_table["fn"].append(1)
+                    dict_table["tp"].append(0)
+                    dict_table["fp"].append(0)
+        #for n,g in enumerate(gt):
+        #    if detected_gt_per_image[img_det][n] == 0:  # If gt wasn't matched by any detection
+        #        #fn[n] = 1  # Mark as false negative
+        #        if generate_table:
+        #            dict_table["fn"].append(1)
+        #    else: 
+        #        if generate_table:
+        #            dict_table["fn"].append(0)
+
                 # print("fp")
         # compute precision, recall and average precision
         acc_fp = np.cumsum(fp)
@@ -224,6 +231,10 @@ def get_pascalvoc_metrics(
             dict_table["acc fp"] = list(acc_fp)
             dict_table["precision"] = list(prec)
             dict_table["recall"] = list(rec)
+            max_length = max([len(lst) for lst in dict_table.values()])
+            for key in dict_table:
+                while len(dict_table[key]) < max_length:
+                    dict_table[key].append(0)
             table = pd.DataFrame(dict_table)
         else:
             table = None
@@ -244,6 +255,7 @@ def get_pascalvoc_metrics(
             "total positives": npos,
             "total tp": np.sum(tp),
             "total fp": np.sum(fp),
+            "total fn": np.sum(fn),
             "method": method,
             "iou": iou_threshold,
             "table": table,

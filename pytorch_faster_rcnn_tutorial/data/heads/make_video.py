@@ -9,8 +9,11 @@ import math
 from torchvision.ops import nms
 from glob import glob
 
-predictions = glob('predictions/GMT3-488/predictions/*.json')
-images = glob('test/*.jpg')
+# predictions = glob('predictions/GMT3-488/predictions/*.json')
+# images = glob('test/*.jpg')
+
+predictions = glob('heads/predictions/*.json')
+images = glob('heads/test/*.jpg')
 
 labels = {
     1: 'Vehicle',
@@ -52,19 +55,19 @@ for i in range(len(predictions)):
         image = cv2.imread(images[i])
 
         # Comment this if you have numbers for labels
-        
-        #for i,label in enumerate(data['labels']):
-        #    try:
-        #        data['labels'][i] = reverse_labels[label]
-        #    except:
-        #        print(f"file: {f}, label: {label}, iteration: {i}")
+        # for i,label in enumerate(data['labels']):
+        #     try:
+        #         data['labels'][i] = reverse_labels[label]
+        #     except:
+        #         print(f"file: {f}, label: {label}, iteration: {i}")
         #data['labels'] = [reverse_labels[label] for label in data['labels']]
         
-
+        # print(type (data['labels']))
+        # print('labels:', data['labels'])
 
         nms_boxes = torch.tensor(data['boxes'])
         if nms_boxes.size()[0] > 0 and USE_NMS:
-            nms_labels = torch.tensor(data[labels])
+            nms_labels = torch.tensor(data['labels'])
             nms_scores = torch.tensor(data['scores'])
 
             mask = nms(nms_boxes, nms_scores, iou_threshold=IOU_THRESHOLD)
@@ -93,7 +96,8 @@ for i in range(len(predictions)):
             if confidence < SCORE_THRESHOLD:
                 continue
 
-            label = data['labels'][j]
+            # label = data['labels'][j]
+            label = labels[data['labels'][j]]
             box = [math.trunc(float(i)) for i in data['boxes'][j]]
 
             # Comment this if you have names for labels

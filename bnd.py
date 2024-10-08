@@ -27,60 +27,59 @@ def check_overlap(coords, label, ped_status):
     #if roi_street.intersection(object_polygon).area > 0.2 * object_polygon.area:
     #    return "Outside"
     
-    if roi_pedlane.intersection(object_polygon).area > 0.1 * object_polygon.area:
-        if label == 'Pedestrian' or label == 'Pedestrian-Violator':
+    if roi_pedlane.intersection(object_polygon).area > 0.05 * object_polygon.area:
+        if label == 2 or label == 5:     # Pedestrian and Pedestrian Violator
             # Pedestrian is inside pedestrian lane ROI and light is red
             if ped_status == 'Red light':
-                return 'Pedestrian-Violator'
+                print("Pedestrian out of lane")
+                return 5                            # Pedestrian Violator
             # Pedestrian is inside pedestrian lane ROI and light is green
             else:
-                return 'Pedestrian'
+                return 2                                     # Pedestrian
             
-        elif label == 'Vehicle' or label == 'Vehicle-Violator':
+        elif label == 1 or label == 4:         # Vehicle and Vehicle Violator
             # Vehicle is inside pedestrian lane ROI and light is green
             if ped_status == 'Green light':
-                return 'Vehicle-Violator'
+                return 4                               # Vehicle Violator
             # Vehicle is inside pedestrian lane ROI and light is red
             else:
-                return 'Vehicle'
+                return 1                                        # Vehicle
             
-        elif label == 'Bicycle' or label == 'Bicycle-Violator':
+        elif label == 3 or label == 6:         # Bicycle and Bicycle Violator
             # Bicycle is inside pedestrian lane ROI and light is green
             if ped_status == 'Green light':
-                return 'Bicycle-Violator'
+                return 6                               # Bicycle Violator
             # Bicycle is inside pedestrian lane ROI and light is red
             else:
-                return 'Bicycle'
+                return 3                                        # Bicycle
     # Kapag wala sa pedestrian lane
     else:
-        if label == 'Pedestrian' or label == 'Pedestrian-Violator':
+        if label == 2 or label == 5:     # Pedestrian and Pedestrian Violator
             if roi_street.intersection(object_polygon).area > 0.2 * object_polygon.area:
                 # Pedestrian is outside the pedestrian lane, but inside the street
                 # They shouldn't be there whether the light is red or green
-                return 'Pedestrian-Violator'
+                return 5                            # Pedestrian Violator
             else:
                 # Pedestrian is outside the street,
                 # they're not violating any rules whether the light is red or green
-                return 'Pedestrian'
+                return 2                                     # Pedestrian
         
-        elif label == 'Vehicle' or label == 'Vehicle-Violator':
+        elif label == 1 or label == 4:         # Vehicle and Vehicle Violator
             # Vehicle is outside pedestrian lane ROI and light is green
             if ped_status == 'Green light':
-                return 'Vehicle'
+                return 1                                        # Vehicle
             # Vehicle is outside pedestrian lane ROI and light is red
             else:
-                return label # Return lang kung ano yung original
+                return label # Return lang kung ano yung original label
             
-        elif label == 'Bicycle' or label == 'Bicycle-Violator':
+        elif label == 3 or label == 6:         # Bicycle and Bicycle Violator
             # Bicycle is outside pedestrian lane ROI and light is green
             if ped_status == 'Green light':
-                return 'Bicycle'
+                return 3                                        # Bicycle
             # Bicycle is outside pedestrian lane ROI and light is red
             else:
                 return label
             
-
-
 def get_light(image):
     """
     image: filepath to image

@@ -10,7 +10,8 @@ import math
 from torchvision.ops import nms
 
 from model import (
-    predict
+    get_model,
+    get_data
 )
 
 dpg.create_context()
@@ -126,7 +127,7 @@ def select_image(sender, app_data, user_data):
         dpg.delete_item("texture_tag")
     
     #TODO:
-    output = predict(image)
+    output = get_data(image)
     print(output)
     load_predicted_images(output, image)
 
@@ -169,6 +170,7 @@ with dpg.window(
     no_title_bar=True,
     no_background=False,
 ):
+    get_model()
     dpg.add_button(label="Select Image", callback=lambda: dpg.show_item("file_dialog_id"))
 
 # Setup

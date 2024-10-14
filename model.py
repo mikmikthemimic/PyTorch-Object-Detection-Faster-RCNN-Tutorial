@@ -56,29 +56,10 @@ color_mapping = {
     5: "red"
 }
 
-def predict(input_path):
-    # transformations
-    transforms = ComposeSingle(
-        [
-            FunctionWrapperSingle(np.moveaxis, source=-1, destination=0),
-            FunctionWrapperSingle(normalize_01),
-        ]
-    )
-    dataset = ObjectDetectionDatasetSingle(
-        inputs=[pathlib.Path(input_path)],
-        transform=transforms,
-        use_cache=False,
-    )
+model = None
 
-    # create dataloader
-    dataloader_prediction = DataLoader(
-        dataset=dataset,
-        batch_size=1,
-        shuffle=False,
-        num_workers=0,
-        collate_fn=collate_single,
-    )
-     
+def get_model():
+         
      # import experiment from neptune
     project_name = f'{params["OWNER"]}/{params["PROJECT"]}'
     print(f"Project: {project_name}")
@@ -99,7 +80,7 @@ def predict(input_path):
         image_std=ast.literal_eval(parameters["IMG_STD"]),
         box_nms_thresh = 0.6
     )
-# 
+
     # download model from neptune or load from checkpoint
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
@@ -152,7 +133,37 @@ def predict(input_path):
     #model_state_dict = {k.replace("model.", ""): v for k, v in checkpoint.items() if k.startswith("model.")}
     #print(model_state_dict.keys())
     model.load_state_dict(checkpoint)
+    model.to(device)
+
+    return model
+
+def get_data(input_path):
+    # transformations
+    transforms = ComposeSingle(
+        [
+            FunctionWrapperSingle(np.moveaxis, source=-1, destination=0),
+            FunctionWrapperSingle(normalize_01),
+        ]
+    )
+    dataset = ObjectDetectionDatasetSingle(
+        inputs=[pathlib.Path(input_path)],
+        transform=transforms,
+        use_cache=False,
+    )
+
+    # create dataloader
+    dataloader_prediction = DataLoader(
+        dataset=dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        collate_fn=collate_single,
+    )
+
+    return predict(dataloader_prediction)
 # 
+    
+def predict(data_input):
     # inference (cpu)
     model.eval()
     model.to(device)

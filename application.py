@@ -10,11 +10,12 @@ import math
 from torchvision.ops import nms
 
 from model import (
-    get_model,
+    my_model,
     get_data
 )
 
 dpg.create_context()
+global model
 
 labels = {
     1: 'Vehicle',
@@ -106,7 +107,7 @@ def load_predicted_images(json_file_name, path_to_image):
             image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), bnd_color, 1)
             cv2.putText(image, label, (box[0], box[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             #cv2.putText(image, f'{confidence:.2f}', (box[0], box[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
-            cv2.putText(image, filename, (1150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            #cv2.putText(image, filename, (1150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             #cv2.putText(image, ("NMS" if USE_NMS else "No NMS"), (1150, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, ((0, 255, 0) if USE_NMS else (0, 0, 255)), 2)
         
     cv2.imwrite(f'output/{filename}.jpg', image)
@@ -127,7 +128,7 @@ def select_image(sender, app_data, user_data):
         dpg.delete_item("texture_tag")
     
     #TODO:
-    output = get_data(image)
+    output = get_data(image, model)
     print(output)
     load_predicted_images(output, image)
 
@@ -170,7 +171,8 @@ with dpg.window(
     no_title_bar=True,
     no_background=False,
 ):
-    get_model()
+    print("Torch Cuda: ", torch.cuda.is_available())
+    model = my_model()
     dpg.add_button(label="Select Image", callback=lambda: dpg.show_item("file_dialog_id"))
 
 # Setup

@@ -58,92 +58,78 @@ color_mapping = {
 
 class my_model():
     #model = None
-    def __init__(self, model):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = model.to(device)
+    def __init__(self):
+        device = torch.device("cpu")
+        project_name = f'{params["OWNER"]}/{params["PROJECT"]}'
+        print(f"Project: {project_name}")
+
+        parameters = {
+            'ACCELERATOR': 'cuda',
+            'ANCHOR_SIZE': '((32,), (64,), (128,), (256,))',
+            'ASPECT_RATIOS': '((0.5, 1.0, 2.0),)',
+            'BACKBONE': 'ResNetBackbones.RESNET34',
+            'BATCH_SIZE': 20,
+            'CACHE': False,
+            'CLASSES': 6,
+            'FAST_DEV_RUN': False,
+            'FOLDS': 5,
+            'FPN': True,
+            'IMG_MEAN': '[0.485, 0.456, 0.406]',
+            'IMG_STD': '[0.229, 0.224, 0.225]',
+            'IOU_THRESHOLD': 0.6,
+            'LOG_MODEL': True,
+            'LR': 0.0025,
+            'MAXEPOCHS': 12,
+            'MAX_SIZE': 1025,
+            'MIN_SIZE': 1024,
+            'PATIENCE': 50,
+            'PRECISION': 32,
+            'SAVE_DIR': '/content/PyTorch-Object-Detection-Faster-RCNN-Tutorial',
+            'SEED': 42,
+            'iou_threshold': 0.6,
+            'lr': 0.0025,
+            'model': None
+        }
+
+        # rcnn transform
+        transform = GeneralizedRCNNTransform(
+            min_size=int(parameters["MIN_SIZE"]),
+            max_size=int(parameters["MAX_SIZE"]),
+            image_mean=ast.literal_eval(parameters["IMG_MEAN"]),
+            image_std=ast.literal_eval(parameters["IMG_STD"]),
+            box_nms_thresh = 0.6
+        )
+
+        download_path = pathlib.Path(os.getcwd()) / params["DOWNLOAD_PATH"]
+        model_name = "model_statedict_GMT3-488_2024_08_06.pt"
+        checkpoint = torch.load(
+            download_path / model_name, map_location=device
+        )
+
+        model = get_faster_rcnn_resnet(
+            num_classes=int(parameters["CLASSES"]),
+            backbone_name=ResNetBackbones(parameters["BACKBONE"].split(".")[1].lower()),  # reverse look-up enum
+            anchor_size=ast.literal_eval(parameters["ANCHOR_SIZE"]),
+            aspect_ratios=ast.literal_eval(parameters["ASPECT_RATIOS"]),
+            fpn=ast.literal_eval(str(parameters['FPN'])),
+            min_size=int(parameters["MIN_SIZE"]),
+            max_size=int(parameters["MAX_SIZE"]),
+        )
+        
+        if 'state_dict' in checkpoint.keys():
+            checkpoint = checkpoint['state_dict']
+
+        model.load_state_dict(checkpoint)
+        model.eval()
+
+        print("Model loaded")
+        self.model = model
     
     def give_model(self):
         return self.model
     #return model
 
-def get_model():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")     
-     # import experiment from neptune
-    project_name = f'{params["OWNER"]}/{params["PROJECT"]}'
-    print(f"Project: {project_name}")
-    project = neptune.init_run(
-        project=project_name,
-        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIzNmE3MzZjYS01MDUxLTQ2YjYtOGU3ZC04YzQwNjg4NmJiZDcifQ==",
-        with_id=params["EXPERIMENT"],
-        mode="read-only",
-    )  # get project
-    experiment_id = params["EXPERIMENT"]  # experiment id
-    parameters = project['training/hyperparams'].fetch()
-# 
-    # rcnn transform
-    transform = GeneralizedRCNNTransform(
-        min_size=int(parameters["MIN_SIZE"]),
-        max_size=int(parameters["MAX_SIZE"]),
-        image_mean=ast.literal_eval(parameters["IMG_MEAN"]),
-        image_std=ast.literal_eval(parameters["IMG_STD"]),
-        box_nms_thresh = 0.6
-    )
-
-    # download model from neptune or load from checkpoint
-    if params["DOWNLOAD"]:
-        download_path = pathlib.Path(os.getcwd()) / params["DOWNLOAD_PATH"]
-        download_path.mkdir(parents=True, exist_ok=True)
-        if params["ENSEMBLE"]:
-            model_name = "ensemble_model.pt"  # that's how I called the best model
-            # model_name = properties['checkpoint_name']  # logged when called log_model_neptune()
-            if not (download_path / model_name).is_file():
-                project['artifacts/ensemble_model'].download(
-                    destination=download_path.as_posix()
-                )  # download model
-    
-            model_state_dict = torch.load(
-                download_path / model_name, map_location=device
-            )
-        else:
-            #new change   08/06/2024      updated to load checkpoint
-            model_name = "model_statedict_GMT3-488_2024_08_06.pt"  # that's how I called the best model                      best-model.pt
-            # model_name = properties['checkpoint_name']  # logged when called log_model_neptune()
-            if not (download_path / model_name).is_file():
-                project['artifacts/folds/fold_4'].download(
-                    destination=download_path.as_posix()
-                )  # download model
-    
-            model_state_dict = torch.load(
-                download_path / model_name, map_location=device
-            )
-    else:
-        checkpoint = torch.load(params["MODEL_DIR"], map_location=device)
-        #print(checkpoint.keys())
-# 
-    model = get_faster_rcnn_resnet(
-    num_classes=int(parameters["CLASSES"]),
-    backbone_name=ResNetBackbones(parameters["BACKBONE"].split(".")[1].lower()),  # reverse look-up enum
-    anchor_size=ast.literal_eval(parameters["ANCHOR_SIZE"]),
-    aspect_ratios=ast.literal_eval(parameters["ASPECT_RATIOS"]),
-    fpn=ast.literal_eval(str(parameters['FPN'])),
-    min_size=int(parameters["MIN_SIZE"]),
-    max_size=int(parameters["MAX_SIZE"]),
-    )
-
-    #print(model)
-     
-    if 'state_dict' in checkpoint.keys():
-        checkpoint = checkpoint['state_dict']
-# 
-    # Check if keys start with model. and remove it
-    #model_state_dict = {k.replace("model.", ""): v for k, v in checkpoint.items() if k.startswith("model.")}
-    #print(model_state_dict.keys())
-    model.load_state_dict(checkpoint)
-    model.eval()
-
-    my_model(model)
-
-def get_data(input_path):
+def get_data(input_path, model):
     # transformations
     transforms = ComposeSingle(
         [
@@ -166,16 +152,14 @@ def get_data(input_path):
         collate_fn=collate_single,
     )
 
-    return predict(dataloader_prediction)
+    return predict(dataloader_prediction, input_path, model)
 # 
     
-def predict(data_input):
-    # inference (cpu)
-    model = my_model.give_model
-    #model.eval()
-    #model.to(device)
+def predict(data_input, input_path, model):
+    model = model.give_model()
     for sample in data_input:
         x, x_name = sample
+        print(x_name)
         with torch.no_grad():
             pred = model(x)
             # Move tensors to CPU before converting to NumPy

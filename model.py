@@ -56,10 +56,18 @@ color_mapping = {
     5: "red"
 }
 
-model = None
+class my_model():
+    #model = None
+    def __init__(self, model):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = model.to(device)
+    
+    def give_model(self):
+        return self.model
+    #return model
 
 def get_model():
-         
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")     
      # import experiment from neptune
     project_name = f'{params["OWNER"]}/{params["PROJECT"]}'
     print(f"Project: {project_name}")
@@ -82,8 +90,6 @@ def get_model():
     )
 
     # download model from neptune or load from checkpoint
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
     if params["DOWNLOAD"]:
         download_path = pathlib.Path(os.getcwd()) / params["DOWNLOAD_PATH"]
         download_path.mkdir(parents=True, exist_ok=True)
@@ -133,9 +139,9 @@ def get_model():
     #model_state_dict = {k.replace("model.", ""): v for k, v in checkpoint.items() if k.startswith("model.")}
     #print(model_state_dict.keys())
     model.load_state_dict(checkpoint)
-    model.to(device)
+    model.eval()
 
-    return model
+    my_model(model)
 
 def get_data(input_path):
     # transformations
@@ -165,9 +171,10 @@ def get_data(input_path):
     
 def predict(data_input):
     # inference (cpu)
-    model.eval()
-    model.to(device)
-    for sample in dataloader_prediction:
+    model = my_model.give_model
+    #model.eval()
+    #model.to(device)
+    for sample in data_input:
         x, x_name = sample
         with torch.no_grad():
             pred = model(x)

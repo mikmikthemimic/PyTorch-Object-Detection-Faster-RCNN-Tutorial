@@ -33,10 +33,10 @@ if not os.path.exists('output'):
 def load_predicted_images(json_file_name, path_to_image):
     filename = os.path.splitext(os.path.basename(path_to_image))[0]
 
-    IOU_THRESHOLD = 0.90
+    IOU_THRESHOLD = 0.65
     SCORE_THRESHOLD = 0
 
-    USE_NMS = False
+    USE_NMS = True
 
     with open(json_file_name) as f:
         data = json.load(f)

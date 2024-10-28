@@ -112,7 +112,7 @@ def get_data(input_path, model):
     )
     dataset = ObjectDetectionDatasetSingle(
         inputs=input_path,
-        transform=transformss,
+        transform=transforms,
         use_cache=False,
     )
 

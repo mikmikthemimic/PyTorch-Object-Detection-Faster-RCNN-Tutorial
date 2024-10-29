@@ -2,6 +2,7 @@ import glob
 import pathlib
 import ast
 import os
+import shutil
 import dearpygui.dearpygui as dpg
 import os
 import cv2
@@ -80,13 +81,14 @@ class FinalModel():
             max_size=int(parameters["MAX_SIZE"]),
             device=device,
             map_location=device,
-        )
+        ).to(device)
         
         if 'state_dict' in checkpoint.keys():
             checkpoint = checkpoint['state_dict']
 
         model.load_state_dict(checkpoint)
         model.eval()
+        # model.to(device)
 
         print("Model loaded")
         self.model = model
@@ -159,6 +161,7 @@ def predict(data_input, input_path, model):
             save_json(pred_list, path=save_dir / filename)
 
             output.append(save_dir/filename)
+            load_predicted_images([save_dir/filename], [pathlib.Path(os.getcwd()) / 'temp' / 'frames' / name.with_suffix(".jpg")])
     return output
 
 labels = {
@@ -179,6 +182,7 @@ def load_predicted_images(
         path_to_images, # List of paths to images
     ):
     for i, image in enumerate(path_to_images):
+        image = str(image)
         filename = os.path.splitext(os.path.basename(image))[0]
         print(f"Processing {filename}")
 
@@ -189,7 +193,7 @@ def load_predicted_images(
 
         with open(json_file_names[i]) as f:
             data = json.load(f)
-            
+
             image_data = cv2.imread(image)
 
             nms_boxes = torch.tensor(data['boxes']) 
@@ -264,6 +268,11 @@ def load_predicted_images(
         for file in os.listdir('temp/output'):
             os.remove(f'temp/output/{file}')
 
+        if dpg.does_item_exist("texture_tag"):
+            print("Deleting existing image")
+            dpg.delete_item("image_tag")
+            dpg.delete_item("texture_tag")
+
         cv2.imwrite(f'temp/output/{filename}.jpg', image_data)
         add_and_load_image(f'temp/output/{filename}.jpg', parent="Primary Window")
 
@@ -276,11 +285,6 @@ def select_file(sender, app_data, user_data):
 
     file_name = next(iter(selections.keys()))
 
-    if dpg.does_item_exist("image_tag"):
-        print("Deleting existing image")
-        dpg.delete_item("image_tag")
-        dpg.delete_item("texture_tag")
-
     # check if the file is a video
     if file_name.endswith('.mp4'):
         # Create a temp folder to store the frames
@@ -288,33 +292,38 @@ def select_file(sender, app_data, user_data):
             os.makedirs('temp/frames')
         
         # Ensures the temp folder is empty
-        # for file in os.listdir('temp/frames'):
-        #     os.remove(f'temp/frames/{file}')
+        for file in os.listdir('temp/frames'):
+            os.remove(f'temp/frames/{file}')
         
-        # cap = cv2.VideoCapture(file_path)
-        # frame_count = 0
-        # print("Reading video")
-        # while True:
-        #     ret, frame = cap.read()
-        #     if not ret:
-        #         break
-        #     cv2.imwrite(f'temp/frames/frame_{frame_count:06d}.jpg', frame)
-        #     frame_count += 1
-        # print("Finished reading video, total frames: ", frame_count)
+        cap = cv2.VideoCapture(file_path)
+        frame_count = 0
+        print("Reading video")
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            cv2.imwrite(f'temp/frames/frame_{frame_count:06d}.jpg', frame)
+            frame_count += 1
+        print("Finished reading video, total frames: ", frame_count)
 
-        # cap.release()
+        cap.release()
         output = get_data(os.getcwd() + '/temp/frames', model)
-        load_predicted_images(output, glob.glob(os.getcwd() + '/temp/frames/*.jpg'))
+        # load_predicted_images(output, glob.glob(os.getcwd() + '/temp/frames/*.jpg'))
     else:
+        # Copy item to temp/frames folder
+        if not os.path.exists('temp/frames'):
+            os.makedirs('temp/frames')
+
+        shutil.copy(file_path, f'temp/frames/{os.path.basename(file_path)}')
         output = get_data(file_path, model)
-        load_predicted_images(output, [file_path])
+        # load_predicted_images(output, [file_path])
 
 # Lambdas
 def add_and_load_image(image_path, parent=None):
     width, height, channels, data = dpg.load_image(image_path)
 
     with dpg.texture_registry() as reg_id:
-        texture_id = dpg.add_static_texture(width, height, data, parent=reg_id, tag="texture_tag")
+        texture_id = dpg.add_dynamic_texture(width, height, data, parent=reg_id, tag="texture_tag")
 
     if parent is None:
         return dpg.add_image(texture_id, tag="image_tag")

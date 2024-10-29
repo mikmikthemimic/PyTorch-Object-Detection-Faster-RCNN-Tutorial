@@ -60,14 +60,15 @@ class BackboneWithFPN(nn.Module):
         self.out_channels = out_channels
 
     def forward(self, x):
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         #b,c,h,w = x.shape
-        #x = x.cuda()
+        x = x.to(device)
         x = self.body(x)
         for key,value in x.items():
             #SE Block
             num_input_channels = value.shape[1]
             #se_block = SENet(input_channels=num_input_channels, squeeze_channels=value.shape[1]).cuda()
-            se_block = SENet(input_channels=num_input_channels, squeeze_channels=value.shape[1])
+            se_block = SENet(input_channels=num_input_channels, squeeze_channels=value.shape[1]).to(device)
             x[key] = se_block(value)
             x[key] = x[key] #.cuda()
             #x[key] = value.cuda()

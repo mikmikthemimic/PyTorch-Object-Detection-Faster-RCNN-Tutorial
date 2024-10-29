@@ -17,3 +17,4 @@ pytorch_faster_rcnn_tutorial/data/heads/fix annotations.py
 /predictions_original
 /predictions - Copy
 pytorch_faster_rcnn_tutorial/data/heads/*.avi
+/temp

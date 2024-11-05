@@ -1,8 +1,6 @@
-import array
-import json
 import pathlib
 import ast
-import dearpygui.dearpygui as dpg
+import os
 import os
 import cv2
 
@@ -12,6 +10,7 @@ import torch
 from torchvision.ops import nms
 
 from pytorch_faster_rcnn_tutorial.backbone_resnet import ResNetBackbones
+
 from pytorch_faster_rcnn_tutorial.faster_RCNN import get_faster_rcnn_resnet
 from pytorch_faster_rcnn_tutorial.transformations import (
     ComposeSingle,
@@ -33,12 +32,6 @@ labels = {
     6: 'Bicycle-Violator',
     99: 'Unknown',
 }
-
-dpg.create_context()
-dpg.create_viewport(
-    title="Test", width=1280, height=840, x_pos=0, y_pos=0, resizable=False
-)
-dpg.setup_dearpygui()
 
 class FinalModel():
     def __init__(self):
@@ -112,7 +105,7 @@ class FinalModel():
 
 def create_prediction_image(predictions, image_data):
     # Constants
-    IOU_THRESHOLD = 0.4
+    IOU_THRESHOLD = 0.65
     SCORE_THRESHOLD = 0
 
     USE_NMS = True
@@ -172,136 +165,35 @@ def create_prediction_image(predictions, image_data):
                 bnd_color = (255, 0, 0)
                 text_color = (36, 255, 12)
 
-        #roi_pedlane = [(46.80, 366.90), (17.30, 463.30), (199.67, 443.63), (342.79, 426.02), (720.40, 383.08), (1228.00, 333.00), (1194.90, 326.94), (1155.27, 320.33), (1092.51, 306.02), (1052.88, 296.11), (1031.96, 289.50), (680.70, 313.70), (687.38, 321.43), (692.88, 329.14), (692.90, 338.70), (681.50, 345.20), (664.80, 346.80), (647.70, 346.70), (625.90, 344.50), (607.30, 340.90), (590.20, 333.60), (570.30, 320.70), (326.27, 342.35)]
-        roi_pedlane = [(45.41,364.32), (1015.1,281.1), (1157.8,329.7), (19.46,450.81)]
-        roi_street = [(106.54,162.43), (1.54,506.21), (0.0,603.48), (0.0,719.59), (1278.44,719.59), (1278.44,321.61), (1207.31,328.39), (1163.28,321.61), (678.94,194.6), (560.4,153.96)]
-
-        roi_pedlane = np.array(roi_pedlane, np.int32)
-        roi_street = np.array(roi_street, np.int32)
-
-        roi_pedlane = roi_pedlane.reshape(-1, 1, 2)
-        roi_street = roi_street.reshape(-1, 1, 2)
-
-        x1, y1, x2, y2 = box
-        # Set the new y2 to be make the bounding box 1/5th of the original height
-        # But at the bottom of the bounding box
-        new_y1 = y1 + ((y2-y1) // 5) * 3
-        image = cv2.rectangle(image, (x1, y1), (x2, y2), bnd_color, 1)
-        # color_mask = cv2.rectangle(image, (x1, new_y1), (x2, y2), bnd_color, cv2.FILLED)
-        # alpha = 0.4
-        # image = cv2.addWeighted(color_mask, alpha, image, 1-alpha, 0)
-        image = cv2.polylines(image, [roi_pedlane], True, (255, 255, 0), 1)
-        image = cv2.polylines(image, [roi_street], True, (255, 0, 255), 1)
-        cv2.rectangle(image, (1132, 203), (1140, 224), (0, 255, 0), 2)
-        cv2.putText(image, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
+        image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), bnd_color, 1)
+        cv2.putText(image, label, (box[0], box[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
     
-    # cv2.imshow('image', image)
-    # cv2.waitKey(1)
+    cv2.imshow('image', image)
+    cv2.waitKey(1)
     return image
 
-# Callbacks
-def select_file(sender, app_data, user_data):
-    selections = app_data.get("selections")
-
-    file_path = next(iter(selections.values())) # Path to the selected file
-    file_name = next(iter(selections.keys()))   # Name of the selected file
-
-    # check if the file is a video
-    if file_name.endswith('.mp4'):
-        cap = cv2.VideoCapture(file_path)
-        video = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (1280, 720))
-
-        frame_count = 0
-        print("Reading video")
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            predictions = model.predict(frame)
-            image = create_prediction_image(predictions, frame)
-            video.write(image)
-
-            for key in predictions:
-                predictions[key] = predictions[key].tolist()
-
-            json.dump(predictions, open(f'app/{frame_count:06d}.json', 'w'))
-
-            # Update the texture with the new image
-            frame = np.flip(image, 2)
-            frame = frame.ravel()
-            frame = np.asfarray(frame, dtype='f')
-            texture_data = np.true_divide(frame, 255.0)
-            dpg.set_value("frame_texture", texture_data)
-
-            frame_count += 1
-        print("Finished reading video, total frames: ", frame_count)
-        cap.release()
-    else: # Selected an image
-        image_data = cv2.imread(file_path)
-        predictions = model.predict(image_data)
-        image = create_prediction_image(predictions, image_data)
-
-        cv2.imwrite('output.jpg', image)
-
-        # Update the texture with the new image
-        frame = np.flip(image, 2)
-        frame = frame.ravel()
-        frame = np.asfarray(frame, dtype='f')
-        texture_data = np.true_divide(frame, 255.0)
-        dpg.set_value("frame_texture", texture_data)
-
-with dpg.file_dialog(
-    tag="file_dialog_id",
-    directory_selector=False,
-    show=False,
-    file_count=1,
-    height=300,
-    callback=select_file
-):
-    dpg.add_file_extension(".*")
-    dpg.add_file_extension(".jpg", color=(0, 255, 0, 255))
-    dpg.add_file_extension(".png", color=(0, 255, 0, 255))
-    dpg.add_file_extension(".jpeg", color=(0, 255, 0, 255))
-
-    dpg.add_file_extension(".mp4", color=(127, 255, 255, 255))
-
-texture_data = []
-for i in range(0, 1280 * 720):
-    texture_data.append(0)
-    texture_data.append(0)
-    texture_data.append(0)
-
-raw_data = array.array('f', texture_data)
-
-with dpg.texture_registry():
-    # Create a raw texture to display frames
-    dpg.add_raw_texture(
-        width=1280,
-        height=720,
-        default_value=raw_data,
-        tag="frame_texture",
-        format=dpg.mvFormat_Float_rgb
-    )
-
-# Main Window
-with dpg.window(
-    label="Main Window",
-    tag="Primary Window",
-    width=1280,
-    height=840,
-    no_resize=True,
-    no_collapse=True,
-    no_move=True,
-    no_scroll_with_mouse=False,
-    no_scrollbar=False,
-    no_title_bar=True,
-    no_background=False,
-):
+def main(input_file):
     model = FinalModel()
-    dpg.add_button(label="Select Image", callback=lambda: dpg.show_item("file_dialog_id"))
-    dpg.add_image(texture_tag="frame_texture")
 
-dpg.show_viewport()
-dpg.start_dearpygui()
-dpg.destroy_context()
+    cap = cv2.VideoCapture(input_file)
+    frame_count = 0
+    print("Reading video")
+    video = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'), 10, (1280, 720))
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        # cv2.imwrite(f'temp/frames/frame_{frame_count:06d}.jpg', frame)
+        predictions = model.predict(frame)
+        image = create_prediction_image(predictions, frame)
+
+        video.write(image)
+
+        frame_count += 1
+    print("Finished reading video, total frames: ", frame_count)
+    cap.release()
+
+if __name__ == "__main__":
+    input_file = "C:/Users/Angelo/Documents/GitHub/PyTorch-Object-Detection-Faster-RCNN-Tutorial/Video_1-00.00.00.000-00.01.40.686.mp4"
+
+    main(input_file=input_file)

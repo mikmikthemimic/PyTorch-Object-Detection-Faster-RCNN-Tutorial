@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
-from pytorch_faster_rcnn_tutorial.metrics.enumerators import MethodAveragePrecision
+#from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
+#from pytorch_faster_rcnn_tutorial.metrics.enumerators import MethodAveragePrecision
+from metrics.bounding_box import BoundingBox
+from metrics.enumerators import MethodAveragePrecision
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -119,11 +121,17 @@ def get_pascalvoc_metrics(
     for bb in det_boxes:
         c = bb.get_class_id()
         confidence_score = bb.get_confidence()
-        if c == 'Vehicle' and confidence_score < 0.5:
+        if c == 'Vehicle' and confidence_score < 0.72:
             continue
-        elif c == 'Pedestrian' and confidence_score < 0.2:
+        elif c == 'Vehicle-Violator' and confidence_score < 0.72:
+            continue
+        elif c == 'Pedestrian' and confidence_score < 0.23:
+            continue
+        elif c == 'Pedestrian-Violator' and confidence_score < 0.23:
             continue
         elif c == 'Bicycle' and confidence_score < 0.2:
+            continue
+        elif c == 'Bicycle-Violator' and confidence_score < 0.2:
             continue
         classes_bbs.setdefault(c, {"gt": [], "det": []})
         classes_bbs[c]["det"].append(bb)

@@ -5,7 +5,8 @@ import math
 from torchvision.ops import nms
 from glob import glob
 
-files = glob('predictions/GMT3-488/predictions/*.json')
+files = glob('predictions/*.json')
+files.extend(glob('test_targets/*.json'))
 
 labels = {
     1: 'Vehicle',
@@ -31,7 +32,7 @@ for file in files:
     with open(file, 'r') as f:
         predictions = json.load(f)
         for i in range(len(predictions['labels'])):
-            predictions['labels'][i] = labels[predictions['labels'][i]]
+            predictions['labels'][i] = reverse_labels[predictions['labels'][i]]
     
     with open(file, 'w') as f:
         json.dump(predictions, f, indent=4)

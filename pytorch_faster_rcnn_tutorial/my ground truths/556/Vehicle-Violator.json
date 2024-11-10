@@ -1,0 +1,28 @@
+{
+    "precision": [],
+    "recall": [],
+    "AP": 0,
+    "interpolated precision": [
+        0
+    ],
+    "interpolated recall": [
+        0
+    ],
+    "total positives": 905,
+    "total tp": 0.0,
+    "total fp": 0.0,
+    "total fn": 0.0,
+    "method": "MethodAveragePrecision.EVERY_POINT_INTERPOLATION",
+    "iou": 0.5,
+    "table": {
+        "image": {},
+        "confidence": {},
+        "tp": {},
+        "fp": {},
+        "fn": {},
+        "acc tp": {},
+        "acc fp": {},
+        "precision": {},
+        "recall": {}
+    }
+}

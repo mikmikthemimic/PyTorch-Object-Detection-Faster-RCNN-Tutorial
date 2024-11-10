@@ -14,8 +14,10 @@ from torchvision.models.detection.transform import GeneralizedRCNNTransform
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.ops import box_area, box_convert
 
-from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
-from pytorch_faster_rcnn_tutorial.metrics.enumerators import BBFormat, BBType
+#from pytorch_faster_rcnn_tutorial.metrics.bounding_box import BoundingBox
+#from pytorch_faster_rcnn_tutorial.metrics.enumerators import BBFormat, BBType
+from metrics.bounding_box import BoundingBox
+from metrics.enumerators import BBFormat, BBType
 
 ROOT_PATH: pathlib.Path = pathlib.Path(__file__).parent.absolute()
 

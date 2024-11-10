@@ -19,3 +19,4 @@ pytorch_faster_rcnn_tutorial/data/heads/fix annotations.py
 pytorch_faster_rcnn_tutorial/data/heads/*.avi
 /temp
 /.vs
+/app

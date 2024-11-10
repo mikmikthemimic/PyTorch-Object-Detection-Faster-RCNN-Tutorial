@@ -191,7 +191,7 @@ class ObjectDetectionDatasetSingle(Dataset):
         # Typecasting
         x = torch.from_numpy(x).type(torch.float32)
 
-        return {"x": x, "x_name": self.inputs[index].name}
+        return {"x": x, "x_name": self.inputs[index].name, "x_path": self.inputs[index]}
 
     @staticmethod
     def read_images(inp):

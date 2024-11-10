@@ -5,13 +5,17 @@ import math
 from torchvision.ops import nms
 from glob import glob
 
-files = glob('predictions/New folder/predictions/*.json')
+files = glob('predictions/556/predictions/*.json')
+files.extend(glob('predictions/558/predictions/*.json'))
 
 labels = {
     1: 'Vehicle',
     2: 'Pedestrian',
     3: 'Bicycle',
-    99: 'Unknown'
+    4: 'Vehicle-Violator',
+    5: 'Pedestrian-Violator',
+    6: 'Bicycle-Violator',
+    99: 'Unknown',
 }
 
 for file in files:

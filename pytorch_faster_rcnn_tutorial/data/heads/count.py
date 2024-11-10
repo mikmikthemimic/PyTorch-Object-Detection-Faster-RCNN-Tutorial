@@ -8,9 +8,15 @@ training_count = {
     "Vehicle": 0,
     "Pedestrian": 0,
     "Bicycle": 0,
+    "Bicycle-Violator": 0,
 }
 
-test_count = training_count.copy()
+test_count = {
+    "Vehicle": 0,
+    "Pedestrian": 0,
+    "Bicycle": 0,
+    "Bicycle-Violator": 0,
+}
 
 for file in training_json:
     with open(file) as f:
@@ -21,7 +27,7 @@ for file in training_json:
             elif label == 'Pedestrian':
                 training_count['Pedestrian'] += 1
             elif label == 'Bicycle':
-                test_count['Bicycle'] += 1
+                training_count['Bicycle'] += 1
 
 for file in test_json:
     with open(file) as f:
@@ -33,6 +39,8 @@ for file in test_json:
                 test_count['Pedestrian'] += 1
             elif label == 'Bicycle':
                 test_count['Bicycle'] += 1
+            elif label == 'Bicycle-Violator':
+                test_count['Bicycle-Violator'] += 1
 
 print(training_count)
 print(test_count)
